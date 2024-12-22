@@ -4,8 +4,11 @@ import Menu from './Menu'
 import Image from 'next/image'
 import SearchBar from './SearchBar'
 import NavIcons from './NavIcons'
+import { ScrollHandler } from './ScrollHandler'
 export default function Navbar() {
   return (
+   
+    <ScrollHandler>
     <div className='h-20 px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64 relative'>
       
       {/* MOBILE SCREENS */}
@@ -32,9 +35,7 @@ export default function Navbar() {
 
           <div className='hidden xl:flex gap-4'>
             <Link href={'/'}>Homepage</Link>
-            <Link href={'/'}>Shop</Link>
-            <Link href={'/'}>Deals</Link>
-            <Link href={'/'}>About</Link>
+            <Link href={'/aboutUs'}>About</Link>
             <Link href={'/'}>Contact</Link>        
           </div>
 
@@ -49,5 +50,6 @@ export default function Navbar() {
 
       </div>
     </div>
+    </ScrollHandler>
   )
 }
