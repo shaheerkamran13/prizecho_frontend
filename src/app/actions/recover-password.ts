@@ -1,43 +1,113 @@
 "use server";
-import { RecoverPasswordSchema } from "@/lib/schemas/userschema";
+
+import { RecoverPasswordSchema, UpdatePasswordSchema } from "@/lib/schemas/userschema";
 import * as z from "zod";
 
 export const resetPassword = async (
   values: z.infer<typeof RecoverPasswordSchema>,
 ) => {
-  // Validate the input fields
   const validatedFields = RecoverPasswordSchema.safeParse(values);
 
-  // Return error if validation fails
   if (!validatedFields.success) {
-    return { error: "Invalid fields!" };
+    return { error: "Invalid email address" };
   }
 
   const { email } = validatedFields.data;
 
-  // Send request to backend API to reset password
   try {
-    const resetRequest = await fetch(
-      `${process.env.BACKEND_AUTH_SERVER_URL}/auth/reset-password/request?email=${encodeURIComponent(email)}`,
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_AUTH_SERVER_URL}/password-reset/`,
       {
         method: "POST",
         headers: {
-          Accept: "application/json",
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({ email }),
         cache: "no-store",
-      },
+      }
     );
-    const res = await resetRequest.json();
 
-    // Handle response and status codes
-    if (resetRequest.status === 404) {
-      return { error: "User not found with this email" };
-    } else if (resetRequest.status === 403) {
-      return { error: "User is not verified" };
-    } else if (resetRequest.status === 200) {
-      return { message: "Password reset link sent successfully" };
+    console.log("Password reset response:", response.status);
+    
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error("Failed to parse response:", text);
+      return { error: "Invalid server response" };
     }
+
+    if (!response.ok) {
+      return { 
+        error: data.detail || data.message || "Failed to send reset email" 
+      };
+    }
+
+    return { 
+      success: true,
+      message: data.message || "Password reset link sent successfully"
+    };
   } catch (error) {
-    return { error: error };
+    console.error("Password reset error:", error);
+    return { error: "An unexpected error occurred" };
+  }
+};
+
+export const confirmPasswordReset = async (
+  values: z.infer<typeof UpdatePasswordSchema>
+) => {
+  const validatedFields = UpdatePasswordSchema.safeParse(values);
+
+  if (!validatedFields.success) {
+    return { error: "Invalid password format" };
+  }
+
+  const { token, new_password } = validatedFields.data;
+
+  // Split the token to get uidb64 and token parts
+  const [uidb64, resetToken] = token.split('/');
+
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_AUTH_SERVER_URL}/password-reset-confirm/`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          uidb64,
+          token: resetToken,
+          new_password
+        }),
+        cache: "no-store",
+      }
+    );
+
+    console.log("Password reset confirm response:", response.status);
+    
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error("Failed to parse response:", text);
+      return { error: "Invalid server response" };
+    }
+
+    if (!response.ok) {
+      return { 
+        error: data.detail || data.message || "Failed to reset password" 
+      };
+    }
+
+    return { 
+      success: true,
+      message: "Password updated successfully"
+    };
+  } catch (error) {
+    console.error("Password reset confirm error:", error);
+    return { error: "An unexpected error occurred" };
   }
 };

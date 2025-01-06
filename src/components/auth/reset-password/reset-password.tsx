@@ -1,17 +1,17 @@
 "use client";
 
-import { resetPassword } from "@/app/actions/recover-password";// Adjust the path as needed
+import { resetPassword } from "@/app/actions/recover-password";
 import { RecoverPasswordSchema } from "@/lib/schemas/userschema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { FormProvider, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
-import "react-phone-input-2/lib/style.css";
 import { toast } from "sonner";
 import * as z from "zod";
 import { Button } from "../ui/button";
 import {
+  Form,
   FormControl,
   FormField,
   FormItem,
@@ -22,13 +22,12 @@ import { FormError } from "../ui/form-error";
 import { FormSuccess } from "../ui/form-success";
 import { Input } from "../ui/input";
 
-function ResetPassword() {
+export default function ResetPassword() {
   const [error, setError] = useState<string | undefined>("");
-  const [success, setSuccess] = useState<any>("");
-  const [isPending, setIsPending] = useState(false); // Use useState for isPending
+  const [success, setSuccess] = useState<string | undefined>("");
+  const [isPending, setIsPending] = useState(false);
   const router = useRouter();
 
-  // Initialize the form with react-hook-form and zod schema
   const form = useForm<z.infer<typeof RecoverPasswordSchema>>({
     resolver: zodResolver(RecoverPasswordSchema),
     defaultValues: {
@@ -36,89 +35,78 @@ function ResetPassword() {
     },
   });
 
-  // Handle form submission
-  const onSubmit = (values: z.infer<typeof RecoverPasswordSchema>) => {
+  const onSubmit = async (values: z.infer<typeof RecoverPasswordSchema>) => {
     setError("");
     setSuccess("");
-    setIsPending(true); // Set isPending to true at the start
+    setIsPending(true);
 
-    resetPassword(values)
-      .then((data) => {
-        if (data?.error) {
-          setError(data.error as string);
-          setSuccess("");
-          toast.error(
-            "An error occurred. Please try again.",
-          );
-
-          if (data.error === "User is not verified") {
-            router.replace("/verify");
-          }
-        } else if (data?.message) {
-          setError("");
-          setSuccess(data.message);
-          toast.success(
-            data.message ||
-              "A password reset link has been sent to your email. Please check your inbox.",
-          );
-
-          if (data.message === "Password reset link sent successfully") {
-            // router.replace("/login");
-          }
-        }
-      })
-      .catch(() => {
-        setError("An error occurred. Please try again.");
-        toast.error("An error occurred. Please try again.");
-      })
-      .finally(() => {
-        setIsPending(false); // Ensure isPending is set to false after response
-      });
+    try {
+      const response = await resetPassword(values);
+      
+      if (response.error) {
+        setError(response.error);
+        toast.error(response.error);
+      } else {
+        // Show success message
+        setSuccess("Password reset link has been sent to your email");
+        toast.success("Check your email for the password reset link");
+        
+        // Simply stay on the page showing the success message
+        form.reset(); // Reset the form
+      }
+    } catch (error) {
+      setError("Something went wrong. Please try again.");
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
-    <FormProvider {...form}>
+    <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  disabled={isPending}
-                  placeholder="Enter registered email"
-                  type="email"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    disabled={isPending || !!success}
+                    placeholder="Enter your email"
+                    type="email"
+                    autoComplete="email"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormError message={error} />
+        <FormSuccess message={success} />
 
         {!success && (
           <Button
-            disabled={isPending || success}
+            disabled={isPending}
             type="submit"
-            className="w-full rounded-md bg-accent py-2 text-center font-medium bg-myColor text-white hover:bg-myColor"
+            className="w-full rounded-md bg-myColor py-2 text-center font-medium text-white hover:bg-myColor/90"
           >
             {isPending ? (
-              <>
+              <div className="flex items-center justify-center">
                 <AiOutlineLoading3Quarters className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
-              </>
+                Sending reset link...
+              </div>
             ) : (
-              "Update Password"
+              "Send Reset Link"
             )}
           </Button>
         )}
-        <FormSuccess message={success} />
-        <FormError message={error} />
       </form>
-    </FormProvider>
+    </Form>
   );
 }
-
-export default ResetPassword;

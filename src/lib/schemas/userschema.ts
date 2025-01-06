@@ -3,48 +3,44 @@ import * as z from "zod";
 export const LoginSchema = z.object({
   username: z
     .string()
-    .email({
-      message: "Invalid email address",
-    })
-    .min(1, { message: "Email is required" }),
-
+    .min(1, { message: "Username is required" }),
   password: z
     .string()
-    .min(8, { message: "Invalid email or password" })
+    .min(8, { message: "Invalid username or password" })
     .regex(/^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/, {
-      message: "Invalid email or password",
+      message: "Invalid username or password",
     }),
 });
 
 export const RegisterSchema = z
   .object({
-    fullname: z.string().min(1, {
-      message: "FullName is required",
+    firstName: z.string().min(1, {
+      message: "First name is required",
     }),
+    lastName: z.string().min(1, {
+      message: "Last name is required",
+    }),
+    username: z.string()
+      .min(3, { message: "Username must be at least 3 characters" })
+      .regex(/^[a-zA-Z0-9_]+$/, {
+        message: "Username can only contain letters, numbers, and underscores",
+      }),
     email: z.string().email({
-      message: "Email is required",
+      message: "Please enter a valid email address",
     }),
-    // password: z.string().min(6, {
-    //   message: "Minimum 6 characters required",
-    // }),
-
     password: z
       .string()
       .min(8, { message: "Password must be at least 8 characters long" })
       .regex(/^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/, {
-        message:
-          "Password must include a letter, number, and special character.",
+        message: "Password must include a letter, number, and special character",
       }),
-
     confirmPassword: z.string(),
-
-    phone: z.string().min(9, {
-      message: "Phone number is required",
-    }),
-    affiliation: z.string().optional(),
+    terms_agreed: z.boolean().refine((val) => val === true, {
+      message: "You must agree to the terms and conditions"
+    })
   })
-  .refine((val) => val.password === val.confirmPassword, {
-    message: "Password does not match",
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
     path: ["confirmPassword"],
   });
 

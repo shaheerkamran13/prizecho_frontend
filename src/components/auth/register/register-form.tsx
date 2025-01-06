@@ -10,7 +10,6 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
-
 import { FormError } from "../ui/form-error";
 import { FormSuccess } from "../ui/form-success";
 import { Input } from "../ui/input";
@@ -25,9 +24,6 @@ import {
   AiOutlineEyeInvisible,
   AiOutlineLoading3Quarters,
 } from "react-icons/ai";
-import ReactPhoneInput  from "react-phone-input-2";
-
-import "react-phone-input-2/lib/style.css";
 import { toast } from "sonner";
 import * as z from "zod";
 
@@ -37,40 +33,46 @@ export const RegisterForm = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [isPending, startTransition] = useTransition();
-
   const router = useRouter();
 
-  // Initialize form with react-hook-form and zod schema
   const form = useForm<z.infer<typeof RegisterSchema>>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
+      firstName: "",
+      lastName: "",
+      username: "",
       email: "",
       password: "",
       confirmPassword: "",
-      fullname: "",
-      phone: "",
-      affiliation: "None",
     },
   });
 
-  const onSubmit = (values: z.infer<typeof RegisterSchema>) => {
+  const onSubmit = async (values: z.infer<typeof RegisterSchema>) => {
     setError("");
     setSuccess("");
-    startTransition(() => {
-      register(values).then((data) => {
-        if (data?.error) {
-          setError(data.error);
-          setSuccess("");
-          toast.error("Account registration failed. Please try again.");
-        } else if (data?.success) {
-          form.reset();
-          setError("");
-          setSuccess(data.success);
-          toast.success("You're almost there! Check your email to verify your account and get started.");
-          router.replace("/verify");
+    
+    startTransition(async () => {
+      try {
+        const result = await register(values);
+  
+        if (result.error) {
+          setError(result.error);
+          toast.error(result.error);
+          return;
         }
-        startTransition(() => {});
-      });
+  
+        if (result.success) {
+          form.reset();
+          setSuccess(result.success);
+          toast.success("Registration successful! Please check your email.");
+          // Updated this line to include email in the URL
+          router.push(`/verify?email=${encodeURIComponent(values.email)}`);
+        }
+      } catch (err) {
+        console.error("Registration error:", err);
+        setError("Registration failed. Please try again.");
+        toast.error("Registration failed");
+      }
     });
   };
 
@@ -78,25 +80,67 @@ export const RegisterForm = () => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-4">
+          <div className="flex gap-4">
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>First Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      disabled={isPending}
+                      placeholder="First name"
+                      type="text"
+                      autoComplete="given-name"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Last Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      disabled={isPending}
+                      placeholder="Last name"
+                      type="text"
+                      autoComplete="family-name"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
           <FormField
             control={form.control}
-            name="fullname"
+            name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel>Username</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     disabled={isPending}
-                    placeholder="Enter your full name"
-                    id="fullName"
-                    autoComplete="fullName"
+                    placeholder="Choose a username"
+                    type="text"
+                    autoComplete="username"
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="email"
@@ -107,7 +151,7 @@ export const RegisterForm = () => {
                   <Input
                     {...field}
                     disabled={isPending}
-                    placeholder="user@email.com"
+                    placeholder="email@example.com"
                     type="email"
                     autoComplete="email"
                   />
@@ -116,6 +160,7 @@ export const RegisterForm = () => {
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="password"
@@ -126,18 +171,14 @@ export const RegisterForm = () => {
                   <div className="relative">
                     <Input
                       {...field}
-                      id="password"
                       disabled={isPending}
-                      placeholder="Enter your password"
+                      placeholder="Create a password"
                       type={showPassword ? "text" : "password"}
-                      autoComplete="password"
-                      className="pl-3 pr-10"
+                      autoComplete="new-password"
                     />
                     <button
                       type="button"
-                      onClick={() =>
-                        !isPending && setShowPassword((prev) => !prev)
-                      }
+                      onClick={() => !isPending && setShowPassword(prev => !prev)}
                       disabled={isPending}
                       className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-500"
                     >
@@ -153,6 +194,7 @@ export const RegisterForm = () => {
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="confirmPassword"
@@ -163,18 +205,14 @@ export const RegisterForm = () => {
                   <div className="relative">
                     <Input
                       {...field}
-                      id="confirmPassword"
                       disabled={isPending}
                       placeholder="Confirm your password"
                       type={showConfirmPassword ? "text" : "password"}
-                      autoComplete="confirmPassword"
-                      className="pl-3 pr-10"
+                      autoComplete="new-password"
                     />
                     <button
                       type="button"
-                      onClick={() =>
-                        !isPending && setShowConfirmPassword((prev) => !prev)
-                      }
+                      onClick={() => !isPending && setShowConfirmPassword(prev => !prev)}
                       disabled={isPending}
                       className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-500"
                     >
@@ -190,51 +228,56 @@ export const RegisterForm = () => {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone</FormLabel>
-                <FormControl>
-                  <ReactPhoneInput
-                    country={"pk"}
-                    value={field.value}
-                    onChange={(phone: string) => field.onChange(phone)}
-                    disabled={isPending}
-                    placeholder="+921234567890"
-                    buttonStyle={{ backgroundColor: "#f9fafb" }}
-                    inputStyle={{
-                      width: "100%",
-                      backgroundColor: "transparent",
-                      opacity: isPending ? 0.5 : 1,
-                    }}
-                    countryCodeEditable={false}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+
+<FormField
+  control={form.control}
+  name="terms_agreed"
+  render={({ field }) => (
+    <FormItem>
+      <div className="flex items-start space-x-2">
+        <FormControl>
+          <input
+            type="checkbox"
+            checked={field.value}
+            onChange={field.onChange}
+            className="mt-1"
           />
+        </FormControl>
+        <FormLabel className="text-sm font-normal">
+          I agree to Prizecho's{" "}
+          <Link href="/terms" className="text-primary hover:underline">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="text-primary hover:underline">
+            Privacy Policy
+          </Link>
+        </FormLabel>
+      </div>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
         </div>
+
         <FormError message={error} />
         <FormSuccess message={success} />
-        {!success && (
-          <Button
-            disabled={isPending || !!success}
-            type="submit"
-            className="w-full rounded-md bg-accent py-2 text-center font-medium bg-myColor text-white hover:bg-myColor"
-          >
-            {isPending ? (
-              <>
-                <AiOutlineLoading3Quarters className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              "Create an account"
-            )}
-          </Button>
-        )}
+
+        <Button
+          disabled={isPending}
+          type="submit"
+          className="w-full rounded-md bg-accent py-2 text-center font-medium bg-myColor text-white hover:bg-myColor"
+        >
+          {isPending ? (
+            <>
+              <AiOutlineLoading3Quarters className="mr-2 h-4 w-4 animate-spin" />
+              Creating account...
+            </>
+          ) : (
+            "Create account"
+          )}
+        </Button>
+
         <p className="w-full text-center text-xs font-medium text-textPrimary">
           Already have an account?&nbsp;&nbsp;
           <Link

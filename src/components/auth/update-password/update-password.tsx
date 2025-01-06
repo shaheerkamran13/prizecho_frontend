@@ -1,40 +1,36 @@
 "use client";
-import { updatePassword } from "@/src/app/actions/update-password";
-import { UpdatePasswordSchema } from "@/src/lib/schemas/userschema";
+
+import { confirmPasswordReset } from "@/app/actions/recover-password";
+import { UpdatePasswordSchema } from "@/lib/schemas/userschema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useTransition } from "react";
-import { FormProvider, useForm } from "react-hook-form";
-import {
-  AiOutlineEye,
-  AiOutlineEyeInvisible,
-  AiOutlineLoading3Quarters,
-} from "react-icons/ai";
-import "react-phone-input-2/lib/style.css";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { toast } from "sonner";
 import * as z from "zod";
-import { Button } from "../../ui/button";
+import { Button } from "../ui/button";
 import {
+  Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from "../../ui/form";
-import { FormError } from "../../ui/form-error";
-import { FormSuccess } from "../../ui/form-success";
-import { Input } from "../../ui/input";
+} from "../ui/form";
+import { FormError } from "../ui/form-error";
+import { FormSuccess } from "../ui/form-success";
+import { Input } from "../ui/input";
 
-type VerifyEmailProps = {
+interface UpdatePasswordProps {
   token: string;
-};
+}
 
-function UpdatePassword({ token }: VerifyEmailProps) {
+export default function UpdatePassword({ token }: UpdatePasswordProps) {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
-  const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState<boolean>(false);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof UpdatePasswordSchema>>({
     resolver: zodResolver(UpdatePasswordSchema),
@@ -45,37 +41,44 @@ function UpdatePassword({ token }: VerifyEmailProps) {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof UpdatePasswordSchema>) => {
+  const onSubmit = async (values: z.infer<typeof UpdatePasswordSchema>) => {
     setError("");
     setSuccess("");
-    startTransition(() => {
-      updatePassword(values).then((data: any) => {
-        if (data?.error) {
-          setError(data.error);
-          setSuccess("");
-          toast.error("An error occurred. Please try again.");
+    setIsPending(true);
 
-          if (data.error === "User is not verified") {
-            window.location.href = "/verify";
-          }
-        } else if (data?.message) {
-          form.reset();
-          setError("");
-          setSuccess(data.message);
-          toast.success("Your password has been updated.");
-
-          if (data.message === "Password updated successfully") {
-            localStorage.setItem("updatePassword", "true");
-            window.location.href = "/login";
-          }
-        }
-        startTransition(() => {});
-      });
-    });
+    try {
+      const response = await confirmPasswordReset(values);
+      
+      if (response.error) {
+        setError(response.error);
+        toast.error(response.error);
+      } else if (response.success) {
+        setSuccess(response.message);
+        toast.success(response.message);
+        
+        // Set flag for dialog close
+        localStorage.setItem("updatePassword", "true");
+        window.dispatchEvent(new StorageEvent("storage", {
+          key: "updatePassword",
+          newValue: "true"
+        }));
+        
+        // Wait for 2 seconds before redirecting
+        setTimeout(() => {
+          router.push("/login");
+        }, 2000);
+      }
+    } catch (error) {
+      console.error("Update password error:", error);
+      setError("Something went wrong. Please try again.");
+      toast.error("Failed to update password");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
-    <FormProvider {...form}>
+    <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-4">
           <FormField
@@ -85,34 +88,19 @@ function UpdatePassword({ token }: VerifyEmailProps) {
               <FormItem>
                 <FormLabel>New Password</FormLabel>
                 <FormControl>
-                  <div className="relative">
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      placeholder="******"
-                      type={showNewPassword ? "text" : "password"}
-                      className="pl-3 pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        !isPending && setShowNewPassword((prev) => !prev)
-                      }
-                      disabled={isPending}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-500"
-                    >
-                      {showNewPassword ? (
-                        <AiOutlineEyeInvisible className="h-5 w-5" />
-                      ) : (
-                        <AiOutlineEye className="h-5 w-5" />
-                      )}
-                    </button>
-                  </div>
+                  <Input
+                    {...field}
+                    disabled={isPending}
+                    placeholder="••••••••"
+                    type="password"
+                    autoComplete="new-password"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="confirm_password"
@@ -120,56 +108,38 @@ function UpdatePassword({ token }: VerifyEmailProps) {
               <FormItem>
                 <FormLabel>Confirm Password</FormLabel>
                 <FormControl>
-                  <div className="relative">
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      placeholder="******"
-                      type={showConfirmPassword ? "text" : "password"}
-                      className="pl-3 pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        !isPending && setShowConfirmPassword((prev) => !prev)
-                      }
-                      disabled={isPending}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-500"
-                    >
-                      {showConfirmPassword ? (
-                        <AiOutlineEyeInvisible className="h-5 w-5" />
-                      ) : (
-                        <AiOutlineEye className="h-5 w-5" />
-                      )}
-                    </button>
-                  </div>
+                  <Input
+                    {...field}
+                    disabled={isPending}
+                    placeholder="••••••••"
+                    type="password"
+                    autoComplete="new-password"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
+
         <FormError message={error} />
         <FormSuccess message={success} />
-        {!success && (
-          <Button
-            disabled={isPending || !!success}
-            type="submit"
-            className="w-full rounded-md bg-accent py-2 text-center font-medium text-white hover:bg-[#18c781]"
-          >
-            {isPending ? (
-              <>
-                <AiOutlineLoading3Quarters className="mr-2 h-4 w-4 animate-spin" />
-                Updating...
-              </>
-            ) : (
-              "Update Password"
-            )}
-          </Button>
-        )}
+
+        <Button
+          disabled={isPending}
+          type="submit"
+          className="w-full rounded-md bg-myColor py-2 text-center font-medium text-white hover:bg-myColor/90"
+        >
+          {isPending ? (
+            <div className="flex items-center justify-center">
+              <AiOutlineLoading3Quarters className="mr-2 h-4 w-4 animate-spin" />
+              Updating Password...
+            </div>
+          ) : (
+            "Update Password"
+          )}
+        </Button>
       </form>
-    </FormProvider>
+    </Form>
   );
 }
-
-export default UpdatePassword;

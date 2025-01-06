@@ -1,7 +1,7 @@
+// src/app/actions/login.ts
 "use server";
 
 import { LoginSchema } from "@/lib/schemas/userschema";
-import { cookies } from "next/headers";
 import * as z from "zod";
 
 export const login = async (values: z.infer<typeof LoginSchema>) => {
@@ -14,64 +14,74 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
   const { username, password } = validatedFields.data;
 
   try {
-    const formData = new URLSearchParams();
-    formData.append("username", username);
-    formData.append("password", password);
-
-    const response = await fetch(
-      `${process.env.BACKEND_AUTH_SERVER_URL}/user/login`,
-      {
-        method: "POST",
-        body: formData,
-        cache: "no-store",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
+    const tokenResponse = await fetch('http://localhost:8000/api/token/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    );
+      body: JSON.stringify({
+        username,
+        password
+      }),
+    });
 
-    if (!response.ok) {
-      const errorData = await response.json();
+    // Parse error response
+    const data = await tokenResponse.json();
 
-      if (response.status === 401) {
-        if (errorData.detail === "Incorrect email or password") {
-          return {
-            error: "Incorrect email or password",
-            message: "Incorrect email or password",
-          };
-        }
-      } else if (response.status === 403) {
+    if (!tokenResponse.ok) {
+      // Check specifically for unverified email error
+      if (data.code === "email_not_verified") {
         return {
-          error: "Email not verified",
-          message: "User is not verified",
+          error: "unverified_email",
+          message: data.message,
+          email: data.email
         };
       }
-      throw new Error(errorData.message || "An error occurred during login");
+
+      if (tokenResponse.status === 400) {
+        return {
+          error: "Invalid credentials",
+          message: "No active account found with the given credentials"
+        };
+      }
+      return {
+        error: data.message || "Login failed",
+        message: "Authentication failed"
+      };
     }
 
-    const userData = await response.json();
-
-    const expiresInMilliseconds = userData.expires_in * 1000;
-
-    const updatedUserData = {
-      ...userData,
-      accessTokenExpires: Date.now() + expiresInMilliseconds,
-    };
-
-    cookies().set({
-      name: "user_data",
-      value: JSON.stringify(updatedUserData),
-      httpOnly: true,
+    const { access, refresh } = data;
+    
+    // Now get user details
+    const userResponse = await fetch('http://localhost:8000/api/user/', {
+      headers: {
+        'Authorization': `Bearer ${access}`,
+        'Content-Type': 'application/json',
+      },
     });
+
+    if (!userResponse.ok) {
+      return {
+        error: "Failed to get user details",
+        message: "Authentication failed"
+      };
+    }
+
+    const userData = await userResponse.json();
 
     return {
       success: "Authenticated!",
       message: "Welcome!",
+      data: {
+        user: userData,
+        tokens: { access, refresh }
+      }
     };
+
   } catch (error) {
-    if (error instanceof Error) {
-      return { error: "Login failed!", message: error.message };
-    }
-    return { error: "Login failed!", message: "An unexpected error occurred" };
+    return { 
+      error: "Login failed!",
+      message: "An unexpected error occurred" 
+    };
   }
 };

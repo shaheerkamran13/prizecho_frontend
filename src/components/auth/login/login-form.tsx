@@ -24,10 +24,8 @@ import {
   AiOutlineEyeInvisible,
   AiOutlineLoading3Quarters,
 } from "react-icons/ai";
-import {toast} from "sonner";
+import { toast } from "sonner";
 import * as z from "zod";
-import Captcha from "@/components/Captcha";
-import { SubmitHandler } from "@/types/captcha";
 
 export const LoginForm = () => {
   const [error, setError] = useState<string | undefined>("");
@@ -44,58 +42,52 @@ export const LoginForm = () => {
     },
   });
 
-  const onSubmit: SubmitHandler<z.infer<typeof LoginSchema>> = (values, e) => {
-    e?.preventDefault();
+  const onSubmit = async (values: z.infer<typeof LoginSchema>) => {
+    try {
+      setError("");
+      setSuccess("");
+      startTransition(true);
 
-    const formElement = e?.target as HTMLFormElement | undefined;
-    if (!formElement) {
-      setError("Unexpected error occurred. Please try again.");
-      return;
-    }
-    const formData = new FormData(formElement);
-    const turnstileRes = formData.get("cf-turnstile-response") as string;
-  
-    if (!turnstileRes) {
-      setError("Please verify before submitting.");
-      toast.error("Please verify before submitting.");
-      return;
-    }
+      const result = await login(values);
 
-    setError("");
-    setSuccess("");
-    startTransition(true);
+      if (result.error === "unverified_email" && result.email) {
+        setError("Unverified email. A new verification email has been sent.");
+        router.push(`/verify/pending?email=${result.email}`);
+        return;
+      }
 
-    login(values)
-      .then((data) => {
-        if (data?.error) {
-          setError(data.error);
-          toast.error("Oops! Login failed. Please try again.");
-          if (data?.error === "Email not verified") {
-            router.push("/resend-link");
-          }
-          form.setValue("password", "");
+      if (result.error) {
+        setError(result.error);
+        toast.error(result.message || "Login failed. Please try again.");
+        form.setValue("password", "");
+        return;
+      }
+
+      if (result.success) {
+        // Store tokens
+        if (result.data?.tokens) {
+          localStorage.setItem('access_token', result.data.tokens.access);
+          localStorage.setItem('refresh_token', result.data.tokens.refresh);
         }
 
-        if (data?.success) {
-          form.reset();
-          setSuccess(data.success);
-          toast.success("Welcome back! You’re now logged in.");
+        form.reset();
+        setSuccess(result.success);
+        toast.success("Welcome back! You're now logged in.");
 
-          const previousPath = localStorage.getItem("previousPath");
-          if (previousPath) {
-            router.back();
-            localStorage.removeItem("previousPath");
-          } else {
-            window.location.href = "/dashboard";
-          }
+        const previousPath = localStorage.getItem("previousPath");
+        if (previousPath) {
+          router.back();
+          localStorage.removeItem("previousPath");
+        } else {
+          window.location.href = "/dashboard";
         }
-      })
-      .catch(() => {
-        setError("Login failed. Please try again.");
-      })
-      .finally(() => {
-        startTransition(false);
-      });
+      }
+    } catch (error) {
+      setError("Login failed. Please try again.");
+      console.error("Login error:", error);
+    } finally {
+      startTransition(false);
+    }
   };
 
   return (
@@ -107,13 +99,13 @@ export const LoginForm = () => {
             name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>Username</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     disabled={isPending}
-                    placeholder="user@gmail.com"
-                    type="email"
+                    placeholder="Enter your username"
+                    type="text"
                     autoComplete="username"
                   />
                 </FormControl>
@@ -167,20 +159,19 @@ export const LoginForm = () => {
           </Button>
         </div>
 
-        <Captcha/>
-
         <FormError message={error} />
         <FormSuccess message={success} />
+
         {!success && (
           <Button
             disabled={isPending || !!success}
             type="submit"
-            className="w-full rounded-md bg-accent py-2 text-center font-medium bg-myColor text-white hover:bg-myColor "
+            className="w-full rounded-md bg-accent py-2 text-center font-medium bg-myColor text-white hover:bg-myColor/90"
           >
             {isPending ? (
               <>
                 <AiOutlineLoading3Quarters className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
+                Signing in...
               </>
             ) : (
               "Login"

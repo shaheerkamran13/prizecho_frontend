@@ -26,7 +26,7 @@ function ResetPassword() {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined | boolean>("");
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();z
 
   const form = useForm<z.infer<typeof ResendLinkSchema>>({
     resolver: zodResolver(ResendLinkSchema),
