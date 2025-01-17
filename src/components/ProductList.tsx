@@ -1,119 +1,97 @@
+'use client'
+// src/components/ProductList.tsx
+import { fetchAPI } from "@/lib/api/config";
 import Link from "next/link";
 import Image from "next/image";
-import React from 'react'
+import { useEffect, useState } from 'react';
 
-export default function ProductList() {
+interface Product {
+  id: number;
+  title: string;
+  description: string;
+  price: number;
+  image: string;
+  slug: string;
+  category: {
+    id: number;
+    name: string;
+    slug: string;
+  };
+  target_amount: number;
+  current_amount: number;
+}
+
+interface ProductListProps {
+  featured?: boolean;
+  categoryId?: number;
+}
+
+export default function ProductList({ featured = false, categoryId }: ProductListProps) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const endpoint = featured 
+      ? '/featured-items/' 
+      : categoryId 
+        ? `/items/?category=${categoryId}`
+        : '/items/';
+    
+    fetchAPI(endpoint)
+      .then(data => {
+        console.log('Products data:', data);
+        setProducts(data.results || []);
+      })
+      .catch(error => console.error('Failed to fetch products:', error))
+      .finally(() => setLoading(false));
+  }, [featured, categoryId]);
+
+  if (loading) {
+    return <div className="w-full text-center py-8">Loading...</div>;
+  }
+
   return (
     <div className="mt-12 flex gap-x-8 gap-y-16 justify-between flex-wrap">
-        {/* ITEM 1 */}
-        <Link href="/test" className="w-full flex flex-col gap-4 sm:w-[45%] lg:w-[22%] ">  
-            <div className="relative w-full h-80">
+      {products.map((product) => (
+        <Link 
+          href={`/${product.category.slug}/${product.slug}`}
+          key={product.id} 
+          className="w-full flex flex-col gap-4 sm:w-[45%] lg:w-[22%]"
+        >  
+          <div className="relative w-full h-80">
             <Image 
-                src={"https://images.pexels.com/photos/29594648/pexels-photo-29594648/free-photo-of-elegant-portrait-of-man-in-outdoor-setting.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"} 
-                alt="" 
-                fill 
-                sizes="25vw"
-                className="absolute object-cover rounded-md z-10 hover:opacity-0 transition-opacity easy duration-500"/>
+              src={product.image || "/images/placeholder-product.jpg"}
+              alt={product.title} 
+              fill 
+              sizes="25vw"
+              className="absolute object-cover rounded-md"
+            />
+          </div>
+          
+          <div className="flex justify-between">
+            <span className="font-medium">{product.title}</span>
+            <span className="font-semibold">${product.price}</span>
+          </div>
 
-            <Image 
-                src={"https://images.pexels.com/photos/1021693/pexels-photo-1021693.jpeg?auto=compress&cs=tinysrgb&w=800"} 
-                alt="" 
-                fill 
-                sizes="25vw"
-                className="absolute object-cover rounded-md  "/>
-
+          <div className="text-sm text-gray-500">{product.description}</div>
+          
+          <div className="flex flex-col gap-2">
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div 
+                className="bg-myColor h-2.5 rounded-full" 
+                style={{ width: `${Math.min((product.current_amount / product.target_amount) * 100, 100)}%` }}
+              />
             </div>
-            <div className="flex justify-between">
-                <span className="font-medium">Product Name</span>
-                <span className="font-semibold">$49</span>
+            <div className="text-xs text-gray-600">
+              ${product.current_amount} raised of ${product.target_amount}
             </div>
-
-            <div className="text-sm text-gray-500">My Description</div>
-            <button className="rounded-2xl text-myColor ring-1 ring-myColor py-2 px-4 text-xs hover:bg-myColor hover:text-white w-max ">Add to Cart</button>
+          </div>
+          
+          <button className="rounded-2xl text-myColor ring-1 ring-myColor py-2 px-4 text-xs hover:bg-myColor hover:text-white w-max">
+            Add to Cart
+          </button>
         </Link>
-
-        {/* ITEM 2 */}
-
-        <Link href="/test" className="w-full flex flex-col gap-4 sm:w-[45%] lg:w-[22%] ">  
-            <div className="relative w-full h-80">
-            <Image 
-                src={"https://images.pexels.com/photos/29594648/pexels-photo-29594648/free-photo-of-elegant-portrait-of-man-in-outdoor-setting.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"} 
-                alt="" 
-                fill 
-                sizes="25vw"
-                className="absolute object-cover rounded-md z-10 hover:opacity-0 transition-opacity easy duration-500"/>
-
-            <Image 
-                src={"https://images.pexels.com/photos/1021693/pexels-photo-1021693.jpeg?auto=compress&cs=tinysrgb&w=800"} 
-                alt="" 
-                fill 
-                sizes="25vw"
-                className="absolute object-cover rounded-md  "/>
-
-            </div>
-            <div className="flex justify-between">
-                <span className="font-medium">Product Name</span>
-                <span className="font-semibold">$49</span>
-            </div>
-
-            <div className="text-sm text-gray-500">My Description</div>
-            <button className="rounded-2xl text-myColor ring-1 ring-myColor py-2 px-4 text-xs hover:bg-myColor hover:text-white w-max ">Add to Cart</button>
-        </Link>
-
-            {/* ITEM 3 */}
-        <Link href="/test" className="w-full flex flex-col gap-4 sm:w-[45%] lg:w-[22%] ">  
-            <div className="relative w-full h-80">
-            <Image 
-                src={"https://images.pexels.com/photos/29594648/pexels-photo-29594648/free-photo-of-elegant-portrait-of-man-in-outdoor-setting.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"} 
-                alt="" 
-                fill 
-                sizes="25vw"
-                className="absolute object-cover rounded-md z-10 hover:opacity-0 transition-opacity easy duration-500"/>
-
-            <Image 
-                src={"https://images.pexels.com/photos/1021693/pexels-photo-1021693.jpeg?auto=compress&cs=tinysrgb&w=800"} 
-                alt="" 
-                fill 
-                sizes="25vw"
-                className="absolute object-cover rounded-md  "/>
-
-            </div>
-            <div className="flex justify-between">
-                <span className="font-medium">Product Name</span>
-                <span className="font-semibold">$49</span>
-            </div>
-
-            <div className="text-sm text-gray-500">My Description</div>
-            <button className="rounded-2xl text-myColor ring-1 ring-myColor py-2 px-4 text-xs hover:bg-myColor hover:text-white w-max ">Add to Cart</button>
-        </Link>
-
-            {/* ITEM 4 */}
-            
-        <Link href="/test" className="w-full flex flex-col gap-4 sm:w-[45%] lg:w-[22%] ">  
-            <div className="relative w-full h-80">
-            <Image 
-                src={"https://images.pexels.com/photos/29594648/pexels-photo-29594648/free-photo-of-elegant-portrait-of-man-in-outdoor-setting.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"} 
-                alt="" 
-                fill 
-                sizes="25vw"
-                className="absolute object-cover rounded-md z-10 hover:opacity-0 transition-opacity easy duration-500"/>
-
-            <Image 
-                src={"https://images.pexels.com/photos/1021693/pexels-photo-1021693.jpeg?auto=compress&cs=tinysrgb&w=800"} 
-                alt="" 
-                fill 
-                sizes="25vw"
-                className="absolute object-cover rounded-md  "/>
-
-            </div>
-            <div className="flex justify-between">
-                <span className="font-medium">Product Name</span>
-                <span className="font-semibold">$49</span>
-            </div>
-
-            <div className="text-sm text-gray-500">My Description</div>
-            <button className="rounded-2xl text-myColor ring-1 ring-myColor py-2 px-4 text-xs hover:bg-myColor hover:text-white w-max ">Add to Cart</button>
-        </Link>
+      ))}
     </div> 
-  )
+  );
 }

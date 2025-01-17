@@ -1,7 +1,5 @@
 // src/lib/api/config.ts
 
-import { cookies } from 'next/headers';
-
 interface FetchOptions extends RequestInit {
   token?: boolean;
   formData?: boolean;
@@ -18,7 +16,7 @@ export class APIError extends Error {
   }
 }
 
-export const API_BASE_URL = process.env.BACKEND_AUTH_SERVER_URL;
+export const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_AUTH_SERVER_URL;
 
 export async function fetchAPI(
   endpoint: string,
@@ -26,7 +24,6 @@ export async function fetchAPI(
 ) {
   const { token = true, formData = false, ...fetchOptions } = options;
   
-  // Fix: Explicitly type the headers object
   const baseHeaders: Record<string, string> = {
     'Accept': 'application/json',
   };
@@ -35,35 +32,34 @@ export async function fetchAPI(
     baseHeaders['Content-Type'] = 'application/json';
   }
 
-  // Merge with any additional headers
   const headers: Record<string, string> = {
     ...baseHeaders,
     ...(fetchOptions.headers as Record<string, string> || {})
   };
 
-  // Get token from cookies if token option is true
-  if (token) {
-    const cookieStore = cookies();
-    const userData = cookieStore.get('user_data');
+  if (token && typeof window !== 'undefined') {
+    const userData = localStorage.getItem('user_data');
     if (userData) {
       try {
-        const { access_token } = JSON.parse(userData.value);
+        const { access_token } = JSON.parse(userData);
         headers['Authorization'] = `Bearer ${access_token}`;
       } catch (error) {
-        console.error('Error parsing user data from cookie:', error);
+        console.error('Error parsing user data:', error);
       }
     }
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const url = `${API_BASE_URL}${endpoint}`.replace(/([^:]\/)\/+/g, '$1');
+    console.log('Fetching from:', url); // Debug log
+
+    const response = await fetch(url, {
       ...fetchOptions,
       headers,
-      credentials: 'include', // Important for cookies
-      cache: 'no-store', 
+      credentials: 'include',
+      cache: 'no-store',
     });
 
-    // Handle different response types
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({
         message: 'An error occurred'
@@ -76,7 +72,6 @@ export async function fetchAPI(
       );
     }
 
-    // Return null for 204 No Content responses
     if (response.status === 204) {
       return null;
     }
@@ -90,7 +85,6 @@ export async function fetchAPI(
   }
 }
 
-// Utility function for handling form data requests
 export async function formDataRequest(
   endpoint: string,
   data: Record<string, string>,
@@ -111,7 +105,6 @@ export async function formDataRequest(
   });
 }
 
-// Type-safe response handler
 export async function handleAPIResponse<T>(
   promise: Promise<T>
 ): Promise<{ data?: T; error?: string; status?: number }> {
