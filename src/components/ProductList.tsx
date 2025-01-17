@@ -1,5 +1,4 @@
 'use client'
-// src/components/ProductList.tsx
 import { fetchAPI } from "@/lib/api/config";
 import Link from "next/link";
 import Image from "next/image";
@@ -22,20 +21,27 @@ interface Product {
 }
 
 interface ProductListProps {
-  featured?: boolean;
+  searchQuery?: string;
   categoryId?: number;
+  featured?: boolean;
 }
 
-export default function ProductList({ featured = false, categoryId }: ProductListProps) {
+export default function ProductList({ featured = false, categoryId, searchQuery }: ProductListProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const endpoint = featured 
-      ? '/featured-items/' 
-      : categoryId 
-        ? `/items/?category=${categoryId}`
-        : '/items/';
+    let endpoint = '';
+    
+    if (searchQuery) {
+      endpoint = `/products/search/?q=${encodeURIComponent(searchQuery)}`;
+    } else if (featured) {
+      endpoint = '/featured-items/';
+    } else if (categoryId) {
+      endpoint = `/items/?category=${categoryId}`;
+    } else {
+      endpoint = '/items/';
+    }
     
     fetchAPI(endpoint)
       .then(data => {
@@ -44,10 +50,21 @@ export default function ProductList({ featured = false, categoryId }: ProductLis
       })
       .catch(error => console.error('Failed to fetch products:', error))
       .finally(() => setLoading(false));
-  }, [featured, categoryId]);
+  }, [featured, categoryId, searchQuery]);
 
   if (loading) {
     return <div className="w-full text-center py-8">Loading...</div>;
+  }
+
+  if (products.length === 0) {
+    return (
+      <div className="w-full text-center py-8 text-gray-500">
+        {searchQuery 
+          ? `No products found for "${searchQuery}"`
+          : "No products available"
+        }
+      </div>
+    );
   }
 
   return (

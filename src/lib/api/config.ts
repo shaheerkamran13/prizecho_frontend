@@ -16,7 +16,7 @@ export class APIError extends Error {
   }
 }
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_AUTH_SERVER_URL;
+export const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_AUTH_SERVER_URL?.replace(/\/api\/?$/, '');
 
 export async function fetchAPI(
   endpoint: string,
@@ -50,7 +50,11 @@ export async function fetchAPI(
   }
 
   try {
-    const url = `${API_BASE_URL}${endpoint}`.replace(/([^:]\/)\/+/g, '$1');
+    // Ensure we have a clean endpoint that starts with /api/
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const apiEndpoint = cleanEndpoint.startsWith('/api/') ? cleanEndpoint : `/api${cleanEndpoint}`;
+    const url = `${API_BASE_URL}${apiEndpoint}`.replace(/([^:]\/)\/+/g, '$1');
+    
     console.log('Fetching from:', url); // Debug log
 
     const response = await fetch(url, {

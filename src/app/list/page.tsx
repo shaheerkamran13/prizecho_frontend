@@ -1,34 +1,144 @@
-import React from 'react'
-import Image from 'next/image'
+'use client'
+
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { ProductService } from '@/lib/api/services/product.service'
 import Filter from '@/components/Filter'
-import ProductList from '@/components/ProductList'
-export default function page() {
+import Image from 'next/image'
+import Link from 'next/link'
+
+interface Product {
+  id: number;
+  title: string;
+  description: string;
+  price: number;
+  image: string;
+  slug: string;
+  category: {
+    id: number;
+    name: string;
+    slug: string;
+  };
+  current_amount: number;
+  target_amount: number;
+}
+
+interface FilterParams {
+  category?: string;
+  min_price?: string;
+  max_price?: string;
+  featured?: boolean;
+  ordering?: string;
+}
+
+export default function ListPage() {
+  const searchParams = useSearchParams()
+  const searchQuery = searchParams.get('q') || undefined
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeFilters, setActiveFilters] = useState<FilterParams>({})
+
+  const fetchProducts = async (filters: FilterParams = {}) => {
+    setLoading(true);
+    try {
+      // Clean up filters before sending
+      const cleanFilters = Object.fromEntries(
+        Object.entries(filters).filter(([_, value]) => 
+          value !== undefined && value !== '' && value !== false
+        )
+      );
+  
+      let response;
+      if (searchQuery) {
+        // If we have a search query, use the search endpoint with filters
+        response = await ProductService.searchProducts(searchQuery, cleanFilters);
+      } else {
+        // If no search query, use regular products endpoint
+        response = await ProductService.getProducts(cleanFilters);
+      }
+      setProducts(response.results || []);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Reset filters when search query changes
+    setActiveFilters({});
+    fetchProducts();
+  }, [searchQuery])
+
+  const handleFilterChange = async (filters: FilterParams) => {
+    setActiveFilters(filters);
+    fetchProducts(filters);
+  }
+
   return (
-    <div className='px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64 relative'>
-      {/* CAMPAIGN*/}
+    <div className="container mx-auto px-4">
+      <h1 className="text-2xl font-bold mt-8">
+        {searchQuery ? `Search Results for "${searchQuery}"` : 'All Products'}
+      </h1>
+      
+      <Filter onFilterChange={handleFilterChange} initialFilters={activeFilters} />
+      
+      {loading ? (
+        <div className="text-center py-8">Loading...</div>
+      ) : products.length > 0 ? (
+        <div className="mt-12 flex gap-x-8 gap-y-16 justify-between flex-wrap">
+          {products.map((product) => (
+            <Link 
+              href={`/${product.category.slug}/${product.slug}`}
+              key={product.id} 
+              className="w-full flex flex-col gap-4 sm:w-[45%] lg:w-[22%]"
+            >  
+              <div className="relative w-full h-80">
+                <Image 
+                  src={product.image || "/images/placeholder-product.jpg"}
+                  alt={product.title} 
+                  fill 
+                  sizes="25vw"
+                  className="absolute object-cover rounded-md"
+                />
+              </div>
+              
+              <div className="flex justify-between">
+                <span className="font-medium">{product.title}</span>
+                <span className="font-semibold">${product.price}</span>
+              </div>
 
-      <div className='hidden p-4 bg-pink-50 sm:flex justify-between h-64'>
-        <div className='w-2/3 flex flex-col items-center justify-center gap-8'>
-        <h1 className="text-4xl font-semibold leading-[48px] text-gray-700">
-            Grab up to 50% off on
-            <br /> Selected Products
-          </h1>
-
-          <button className='ring-1 ring-myColor bg-myColor text-white rounded-3xl w-max text-sm py-2 px-4  hover:bg-pink-700'>Buy Now</button>
+              <div className="text-sm text-gray-500 line-clamp-2">{product.description}</div>
+              
+              <div className="flex flex-col gap-2">
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-myColor h-2.5 rounded-full" 
+                    style={{ 
+                      width: `${Math.min((product.current_amount / product.target_amount) * 100, 100)}%` 
+                    }}
+                  />
+                </div>
+                <div className="text-xs text-gray-600">
+                  ${product.current_amount} raised of ${product.target_amount}
+                </div>
+              </div>
+              
+              <button className="rounded-2xl text-myColor ring-1 ring-myColor py-2 px-4 text-xs hover:bg-myColor hover:text-white w-max">
+                Add to Cart
+              </button>
+            </Link>
+          ))}
         </div>
-        <div className='relative w-1/3'>
-          <Image src={'/woman.png'} alt='' fill className='object-contain' sizes=''/>
+      ) : (
+        <div className="text-center py-8">
+          {searchQuery 
+            ? `No products found for "${searchQuery}"`
+            : "No products available"
+          }
         </div>
-      </div>
-      <div>
-
-      </div>
-      {/* FILTER */}
-      <Filter/>
-
-      {/* PRODUCTS */}
-      <h1 className=' mt-12 text-xl font-semibold'>Shoes for you !</h1>
-      <ProductList/>
+      )}
     </div>
   )
 }
