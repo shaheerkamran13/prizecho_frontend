@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import Image from 'next/image'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import CartModel from './CartModel';
@@ -9,68 +9,114 @@ import CartModel from './CartModel';
 export default function NavIcons() {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     const router = useRouter();
 
-    //TEMPORARY LOGIN ATTEMPT, AUTH WILL BE IMPLEMENTED LATER
-    const isLoggedIn = false;
+    useEffect(() => {
+        // Check if user is logged in by looking for the token
+        const token = localStorage.getItem('access_token');
+        setIsLoggedIn(!!token);
+    }, []);
 
-    const handleProfile = ()=>{
-        if(!isLoggedIn){
-            router.push('/login')
+    const handleProfile = () => {
+        if (!isLoggedIn) {
+            router.push('/login');
+            return;
         }
+        setIsProfileOpen((prev) => !prev);
+    };
 
-        setIsProfileOpen((prev) => !prev)
-    }
+    const handleLogout = async () => {
+        try {
+            const token = localStorage.getItem('refresh_token');
+            const response = await fetch('http://localhost:8000/api/logout/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                body: JSON.stringify({ refresh_token: token }),
+            });
 
-  return (
-    <div className='flex items-center gap-4 xl:gap-6 relative'>
+            if (!response.ok) {
+                throw new Error('Logout failed');
+            }
 
-        {/* PROFILE COMPONENT */}
-        <Image 
-            src={'/profile.png'} 
-            alt='profile' 
-            width={22} 
-            height={22}     
-            className='cursor-pointer'
-            onClick={handleProfile}
-        />
+            // Clear local storage
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            
+            // Close profile dropdown
+            setIsProfileOpen(false);
+            
+            // Update logged in state
+            setIsLoggedIn(false);
+            
+            // Redirect to login page
+            router.push('/login');
+            
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
 
-        {isProfileOpen && (
-            <div className='absolute p-4 rounded-md top-12 left-0 text-sm shadow-[0_3px_10px_rgb(0,0,0,0.2)] z-20'>
-                <Link href={'/'}>Profile</Link>
-                <div className='mt-2 cursor-pointer'>Logout</div>
-            </div>
-        )}
+    return (
+        <div className='flex items-center gap-4 xl:gap-6 relative'>
+            {/* PROFILE COMPONENT */}
+            <Image 
+                src={'/profile.png'} 
+                alt='profile' 
+                width={22} 
+                height={22}     
+                className='cursor-pointer'
+                onClick={handleProfile}
+            />
 
+            {isProfileOpen && (
+                <div className='absolute p-4 rounded-md top-12 left-0 text-sm shadow-[0_3px_10px_rgb(0,0,0,0.2)] z-20 bg-white'>
+                    <Link 
+                        href="/profile" 
+                        className="block hover:text-myColor"
+                        onClick={() => setIsProfileOpen(false)}
+                    >
+                        Profile
+                    </Link>
+                    <div 
+                        className='mt-2 cursor-pointer hover:text-myColor'
+                        onClick={handleLogout}
+                    >
+                        Logout
+                    </div>
+                </div>
+            )}
             
             {/* NOTIFICATION COMPONENT */}
-        <Image 
-            src={'/notification.png'} 
-            alt='notification' 
-            width={22} 
-            height={22} 
-            className='cursor-pointer'
-        />
-
-            {/* CART COMPONENT */}
-        <div 
-            className='relative cursor-pointer'
-            onClick={() =>{setIsCartOpen((prev) => !prev)}}>
-            
             <Image 
-                src={'/cart.png'} 
-                alt='cart' 
+                src={'/notification.png'} 
+                alt='notification' 
                 width={22} 
                 height={22} 
                 className='cursor-pointer'
-                
             />
 
-            <div className='absolute -top-4 -right-4 w-6 h-6 bg-myColor text-sm rounded-full text-white flex items-center justify-center'>2</div>
-
+            {/* CART COMPONENT */}
+            <div 
+                className='relative cursor-pointer'
+                onClick={() => {setIsCartOpen((prev) => !prev)}}
+            >
+                <Image 
+                    src={'/cart.png'} 
+                    alt='cart' 
+                    width={22} 
+                    height={22} 
+                    className='cursor-pointer'
+                />
+                <div className='absolute -top-4 -right-4 w-6 h-6 bg-myColor text-sm rounded-full text-white flex items-center justify-center'>
+                    2
+                </div>
+            </div>
+            {isCartOpen && <CartModel/>}     
         </div>
-        {isCartOpen && <CartModel/>}     
-    </div>
-  )
+    );
 }

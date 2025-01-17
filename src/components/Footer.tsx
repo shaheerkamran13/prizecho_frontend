@@ -13,14 +13,24 @@ export default function Footer() {
           </Link>
           
           <p>3252 Winding Way, Central Plaza, Willowbrook, CA 90210, United States</p>
-          <span className ="flex font-semibold" >ubaid1@gmail.com</span>
-          <span className ="flex font-semibold" >+1 412 212 41</span>
+          <span className ="flex font-semibold" >support@prizecho.com</span>
+          <span className ="flex font-semibold" >+92 334 1818294</span>
           <div className='flex gap-6'>
-            <Image src="/facebook.png" alt="" width={16} height={16} />
-            <Image src="/instagram.png" alt="" width={16} height={16} />
-            <Image src="/youtube.png" alt="" width={16} height={16} />
-            <Image src="/pinterest.png" alt="" width={16} height={16} />
-            <Image src="/x.png" alt="" width={16} height={16} />
+           <a href="https://facebook.com/your.profile" target="_blank" rel="noopener noreferrer">
+           <Image src="/facebook.png" alt="Facebook" width={16} height={16} className="hover:opacity-80" />
+            </a>
+            <a href="https://instagram.com/prizecho" target="_blank" rel="noopener noreferrer">
+              <Image src="/instagram.png" alt="Instagram" width={16} height={16} className="hover:opacity-80" />
+            </a>
+            <a href="https://youtube.com/@prizecho" target="_blank" rel="noopener noreferrer">
+              <Image src="/youtube.png" alt="YouTube" width={16} height={16} className="hover:opacity-80" />
+            </a>
+            <a href="https://pinterest.com/your.profile" target="_blank" rel="noopener noreferrer">
+              <Image src="/pinterest.png" alt="Pinterest" width={16} height={16} className="hover:opacity-80" />
+            </a>
+            <a href="https://twitter.com/prizecho" target="_blank" rel="noopener noreferrer">
+              <Image src="/x.png" alt="X (Twitter)" width={16} height={16} className="hover:opacity-80" />
+            </a>
           </div>
         </div>
         {/* CENTER */}
@@ -28,18 +38,18 @@ export default function Footer() {
           <div className="flex flex-col justify-between">
             <h1 className="font-medium text-lg">COMPANY</h1>
             <div className="flex flex-col gap-6">
-              <Link href="">About Us</Link>
+              <Link href="/aboutUs">About Us</Link>
               <Link href="">Careers</Link>
               <Link href="">Affiliates</Link>
-              <Link href="">Blog</Link>
-              <Link href="">Contact Us</Link>
+              <Link href="/blog">Blog</Link>
+              <Link href="contact-us">Contact Us</Link>
             </div>
           </div>
           <div className="flex flex-col justify-between">
             <h1 className="font-medium text-lg">SHOP</h1>
             <div className="flex flex-col gap-6">
               <Link href="">New Arrivals</Link>
-              <Link href="">Accessories</Link>
+              <Link href="/categories/Accessories">Accessories</Link>
               <Link href="">Men</Link>
               <Link href="">Women</Link>
               <Link href="">All Products</Link>
@@ -49,7 +59,7 @@ export default function Footer() {
             <h1 className="font-medium text-lg">HELP</h1>
             <div className="flex flex-col gap-6">
               <Link href="">Customer Service</Link>
-              <Link href="">My Account</Link>
+              <Link href="/profile">My Account</Link>
               <Link href="">Find a Store</Link>
               <Link href="">Legal & Privacy</Link>
               <Link href="">Gift Card</Link>

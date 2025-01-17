@@ -79,7 +79,7 @@ export const LoginForm = () => {
           router.back();
           localStorage.removeItem("previousPath");
         } else {
-          window.location.href = "/dashboard";
+          window.location.href = "/";
         }
       }
     } catch (error) {
