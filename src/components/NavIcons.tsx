@@ -14,7 +14,6 @@ export default function NavIcons() {
     const router = useRouter();
 
     useEffect(() => {
-        // Check if user is logged in by looking for the token
         const token = localStorage.getItem('access_token');
         setIsLoggedIn(!!token);
     }, []);
@@ -25,6 +24,14 @@ export default function NavIcons() {
             return;
         }
         setIsProfileOpen((prev) => !prev);
+    };
+
+    const handleCart = () => {
+        if (!isLoggedIn) {
+            router.push('/login');
+            return;
+        }
+        setIsCartOpen((prev) => !prev);
     };
 
     const handleLogout = async () => {
@@ -43,17 +50,10 @@ export default function NavIcons() {
                 throw new Error('Logout failed');
             }
 
-            // Clear local storage
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
-            
-            // Close profile dropdown
             setIsProfileOpen(false);
-            
-            // Update logged in state
             setIsLoggedIn(false);
-            
-            // Redirect to login page
             router.push('/login');
             
         } catch (error) {
@@ -63,47 +63,52 @@ export default function NavIcons() {
 
     return (
         <div className='flex items-center gap-4 xl:gap-6 relative'>
-            {/* PROFILE COMPONENT */}
-            <Image 
-                src={'/profile.png'} 
-                alt='profile' 
-                width={22} 
-                height={22}     
-                className='cursor-pointer'
-                onClick={handleProfile}
-            />
+            {isLoggedIn && (
+                <>
+                    {/* PROFILE */}
+                    <Image 
+                        src={'/profile.png'} 
+                        alt='profile' 
+                        width={22} 
+                        height={22}     
+                        className='cursor-pointer'
+                        onClick={handleProfile}
+                    />
 
-            {isProfileOpen && (
-                <div className='absolute p-4 rounded-md top-12 left-0 text-sm shadow-[0_3px_10px_rgb(0,0,0,0.2)] z-20 bg-white'>
-                    <Link 
-                        href="/profile" 
-                        className="block hover:text-myColor"
-                        onClick={() => setIsProfileOpen(false)}
-                    >
-                        Profile
-                    </Link>
-                    <div 
-                        className='mt-2 cursor-pointer hover:text-myColor'
-                        onClick={handleLogout}
-                    >
-                        Logout
-                    </div>
-                </div>
+                    {isProfileOpen && (
+                        <div className='absolute p-4 rounded-md top-12 left-0 text-sm shadow-[0_3px_10px_rgb(0,0,0,0.2)] z-20 bg-white'>
+                            <Link 
+                                href="/profile" 
+                                className="block hover:text-myColor"
+                                onClick={() => setIsProfileOpen(false)}
+                            >
+                                Profile
+                            </Link>
+                            <div 
+                                className='mt-2 cursor-pointer hover:text-myColor'
+                                onClick={handleLogout}
+                            >
+                                Logout
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* NOTIFICATION */}
+                    <Image 
+                        src={'/notification.png'} 
+                        alt='notification' 
+                        width={22} 
+                        height={22} 
+                        className='cursor-pointer'
+                        onClick={() => router.push('/notifications')}
+                    />
+                </>
             )}
-            
-            {/* NOTIFICATION COMPONENT */}
-            <Image 
-                src={'/notification.png'} 
-                alt='notification' 
-                width={22} 
-                height={22} 
-                className='cursor-pointer'
-            />
 
-            {/* CART COMPONENT */}
+            {/* CART */}
             <div 
                 className='relative cursor-pointer'
-                onClick={() => {setIsCartOpen((prev) => !prev)}}
+                onClick={handleCart}
             >
                 <Image 
                     src={'/cart.png'} 
@@ -112,11 +117,13 @@ export default function NavIcons() {
                     height={22} 
                     className='cursor-pointer'
                 />
-                <div className='absolute -top-4 -right-4 w-6 h-6 bg-myColor text-sm rounded-full text-white flex items-center justify-center'>
-                    2
-                </div>
+                {isLoggedIn && (
+                    <div className='absolute -top-4 -right-4 w-6 h-6 bg-myColor text-sm rounded-full text-white flex items-center justify-center'>
+                        2
+                    </div>
+                )}
             </div>
-            {isCartOpen && <CartModel/>}     
+            {isCartOpen && isLoggedIn && <CartModel/>}     
         </div>
     );
 }

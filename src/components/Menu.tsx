@@ -67,10 +67,8 @@ export default function Menu() {
                             </div>
                         )}
                     </div>
-                    <Link href={'/aboutUs'}>About</Link>
-                    <Link href={'/'}>Contact</Link>
-                    <Link href={'/'}>Deals</Link>
                     <Link href={'/'}>Shop</Link>
+                    <Link href={'/'}>Deals</Link>
                     <Link href={'/'}>Logout</Link>
                     <Link href={'/'}>Cart(1)</Link>
                 </div>

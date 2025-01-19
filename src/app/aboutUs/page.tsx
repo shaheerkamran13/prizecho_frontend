@@ -1,11 +1,12 @@
 import React from 'react';
-import { Users, ShoppingBag, Award, Globe, ArrowRight } from 'lucide-react';
+import { Users, Gift, Award, Globe, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 
 const AboutUs = () => {
   const stats = [
-    { icon: <Users size={24} />, value: "50k+", label: "Happy Customers", description: "Across 30+ countries" },
-    { icon: <ShoppingBag size={24} />, value: "10k+", label: "Products", description: "Curated selection" },
-    { icon: <Award size={24} />, value: "99%", label: "Satisfaction Rate", description: "From verified reviews" },
+    { icon: <Users size={24} />, value: "10k+", label: "Active Users", description: "Growing community" },
+    { icon: <Gift size={24} />, value: "1k+", label: "Winners", description: "Happy customers" },
+    { icon: <Award size={24} />, value: "100%", label: "Transparency", description: "Fair selection process" },
     { icon: <Globe size={24} />, value: "24/7", label: "Support", description: "Always here to help" }
   ];
 
@@ -14,17 +15,17 @@ const AboutUs = () => {
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gray-50">
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-blue-100 opacity-40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-myColor/5 to-myColor/10 opacity-40" />
         </div>
         <div className="relative px-4 sm:px-6 lg:px-8">
           <div className="text-center py-12 sm:py-24 animate-fade-in">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900">
-              <span className="block">Crafting Excellence</span>
-              <span className="block text-myColor mt-2">in Every Detail</span>
+              <span className="block">Revolutionizing Shopping</span>
+              <span className="block text-myColor mt-2">One Prize at a Time</span>
             </h1>
             <p className="mt-6 mx-auto text-base sm:text-lg md:text-xl text-gray-500 leading-relaxed max-w-lg sm:max-w-2xl px-4">
-              Since 2015, we've been dedicated to bringing exceptional products to discerning customers worldwide,
-              combining luxury with accessibility.
+              At Prizecho, we're transforming the traditional shopping experience into an exciting journey 
+              where every purchase could lead to winning amazing products.
             </p>
           </div>
         </div>
@@ -35,7 +36,7 @@ const AboutUs = () => {
       {/* Stats Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 sm:-mt-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {stats.map((stat, index) => (
+          {stats.map((stat) => (
             <div
               key={stat.label}
               className="bg-white rounded-xl shadow-lg p-6 sm:p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
@@ -65,21 +66,21 @@ const AboutUs = () => {
               Our Mission & Vision
             </h2>
             <p className="text-base sm:text-lg text-gray-600 leading-relaxed mb-6">
-              We envision a world where quality meets accessibility. Our mission is to revolutionize 
-              online shopping by providing meticulously curated products that exceed expectations,
-              backed by unparalleled customer service.
+              We believe everyone deserves a chance to own premium products. Our mission is to create 
+              a fair and exciting platform where users can participate in winning high-quality items 
+              through our innovative prize-based shopping model.
             </p>
-            <button className="group inline-flex items-center text-blue-600 font-semibold text-base sm:text-lg">
-              Learn about our process
+            <Link href="/how-prizecho-works" className="group inline-flex items-center text-myColor font-semibold text-base sm:text-lg">
+              Learn how Prizecho works
               <ArrowRight className="ml-2 w-4 h-4 transition-transform duration-300 group-hover:translate-x-2" />
-            </button>
+            </Link>
           </div>
           <div className="order-1 md:order-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { title: "Innovation", desc: "Pushing boundaries in e-commerce" },
-              { title: "Quality", desc: "Uncompromising standards" },
-              { title: "Sustainability", desc: "Eco-conscious practices" },
-              { title: "Community", desc: "Building lasting relationships" }
+              { title: "Fair Chance", desc: "Equal opportunity for everyone" },
+              { title: "Transparency", desc: "Clear and honest process" },
+              { title: "Accessibility", desc: "Premium products for all" },
+              { title: "Community", desc: "Building trust and excitement" }
             ].map((item) => (
               <div
                 key={item.title}
@@ -99,23 +100,23 @@ const AboutUs = () => {
           <div className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Our Core Values</h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
-              These principles guide every decision we make and every product we offer.
+              These principles guide our commitment to revolutionizing the online shopping experience.
             </p>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {[
               {
-                title: "Exceptional Quality",
-                description: "Every product in our collection undergoes rigorous quality assessment to ensure it meets our exacting standards."
+                title: "Fair Selection Process",
+                description: "Our automated system ensures every participant has an equal chance of winning, maintaining complete transparency and fairness."
               },
               {
-                title: "Customer Excellence",
-                description: "We believe in building lasting relationships through outstanding service and genuine care for our customers' needs."
+                title: "User Trust",
+                description: "We prioritize building trust through secure transactions, reliable customer support, and a transparent winning process."
               },
               {
-                title: "Sustainable Practice",
-                description: "Our commitment to environmental responsibility drives us to implement eco-friendly practices across our operations."
+                title: "Community Engagement",
+                description: "We foster a vibrant community where users can share experiences, participate in events, and celebrate winners."
               }
             ].map((value) => (
               <div

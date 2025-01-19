@@ -29,9 +29,7 @@ export default function Navbar() {
             </Link>
 
             <div className='hidden xl:flex gap-4'>
-              <CategoriesMenu />
-              <Link href={'/aboutUs'}>About</Link>
-              <Link href={'/'}>Contact</Link>        
+              <CategoriesMenu />     
             </div>
           </div>
 
