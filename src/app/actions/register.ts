@@ -42,32 +42,41 @@ export const register = async (values: z.infer<typeof RegisterSchema>) => {
 
     const data = await response.json();
 
+    // Log response data for debugging
+    console.log("Registration response:", data);
+
     if (!response.ok) {
-      // Log error response for debugging
-      console.error("Registration failed:", data);
-      
-      if (response.status === 400) {
-        // Handle validation errors
-        if (data.username) return { error: data.username[0] };
-        if (data.email) return { error: data.email[0] };
-        if (data.password) return { error: data.password[0] };
-        if (data.non_field_errors) return { error: data.non_field_errors[0] };
+      // Check if the error has a detail object with message
+      if (data.detail && data.detail.message) {
+        return { error: data.detail.message };
       }
 
-      return { 
-        error: "Registration failed. Please try again." 
-      };
+      // Check for specific field errors
+      if (data.message) {
+        return { error: data.message };
+      }
+
+      // Handle field-specific errors
+      const fieldErrors = ['username', 'email', 'password', 'non_field_errors'];
+      for (const field of fieldErrors) {
+        if (data[field] && data[field].length > 0) {
+          return { error: data[field][0] };
+        }
+      }
+
+      // Fallback error message
+      return { error: "Registration failed. Please try again." };
     }
 
     return { 
       success: "Registration successful! Please check your email to verify your account.",
-      data: { email: email }  // Add this line to return the email
+      data: { email } 
     };
 
   } catch (error) {
     console.error("Registration error:", error);
     return { 
-      error: "An error occurred during registration." 
+      error: "An error occurred during registration. Please try again later." 
     };
   }
 };

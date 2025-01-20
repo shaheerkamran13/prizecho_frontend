@@ -38,6 +38,15 @@ export const resetPassword = async (
       return { error: "Invalid server response" };
     }
 
+    // Handle unverified email response
+    if (data.code === 'unverified_email') {
+      return {
+        code: 'unverified_email',
+        email: data.email,
+        message: data.message
+      };
+    }
+
     if (!response.ok) {
       return { 
         error: data.detail || data.message || "Failed to send reset email" 

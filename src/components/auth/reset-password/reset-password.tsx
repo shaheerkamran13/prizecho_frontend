@@ -26,6 +26,7 @@ export default function ResetPassword() {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, setIsPending] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const router = useRouter();
 
   const form = useForm<z.infer<typeof RecoverPasswordSchema>>({
@@ -35,9 +36,33 @@ export default function ResetPassword() {
     },
   });
 
+  const handleSendVerification = async () => {
+    if (!unverifiedEmail) return;
+    
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_AUTH_SERVER_URL}/send-verification/`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: unverifiedEmail })
+        }
+      );
+
+      if (response.ok) {
+        toast.success("Verification email sent. Please check your inbox.");
+      } else {
+        toast.error("Failed to send verification email. Please try again.");
+      }
+    } catch (error) {
+      toast.error("Failed to send verification email. Please try again.");
+    }
+  };
+
   const onSubmit = async (values: z.infer<typeof RecoverPasswordSchema>) => {
     setError("");
     setSuccess("");
+    setUnverifiedEmail(null);
     setIsPending(true);
 
     try {
@@ -46,13 +71,14 @@ export default function ResetPassword() {
       if (response.error) {
         setError(response.error);
         toast.error(response.error);
+      } else if (response.code === 'unverified_email') {
+        setUnverifiedEmail(values.email);
+        setError("Please verify your email address before resetting your password.");
+        toast.error("Email not verified");
       } else {
-        // Show success message
-        setSuccess("Password reset link has been sent to your email");
+        setSuccess(response.message);
         toast.success("Check your email for the password reset link");
-        
-        // Simply stay on the page showing the success message
-        form.reset(); // Reset the form
+        form.reset();
       }
     } catch (error) {
       setError("Something went wrong. Please try again.");
@@ -89,6 +115,16 @@ export default function ResetPassword() {
 
         <FormError message={error} />
         <FormSuccess message={success} />
+
+        {unverifiedEmail && (
+          <Button
+            type="button"
+            onClick={handleSendVerification}
+            className="w-full rounded-md bg-blue-500 py-2 text-center font-medium text-white hover:bg-blue-600"
+          >
+            Resend Verification Email
+          </Button>
+        )}
 
         {!success && (
           <Button

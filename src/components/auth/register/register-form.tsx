@@ -47,31 +47,26 @@ export const RegisterForm = () => {
     },
   });
 
+  // register-form.tsx
+
   const onSubmit = async (values: z.infer<typeof RegisterSchema>) => {
     setError("");
     setSuccess("");
     
     startTransition(async () => {
-      try {
-        const result = await register(values);
+      const result = await register(values);
   
-        if (result.error) {
-          setError(result.error);
-          toast.error(result.error);
-          return;
-        }
+      if (result.error) {
+        setError(result.error);
+        toast.error(result.error);
+        return;
+      }
   
-        if (result.success) {
-          form.reset();
-          setSuccess(result.success);
-          toast.success("Registration successful! Please check your email.");
-          // Updated this line to include email in the URL
-          router.push(`/verify?email=${encodeURIComponent(values.email)}`);
-        }
-      } catch (err) {
-        console.error("Registration error:", err);
-        setError("Registration failed. Please try again.");
-        toast.error("Registration failed");
+      if (result.success) {
+        form.reset();
+        setSuccess(result.success);
+        toast.success("Registration successful! Please check your email.");
+        router.push(`/verify?email=${encodeURIComponent(values.email)}`);
       }
     });
   };
@@ -245,13 +240,9 @@ export const RegisterForm = () => {
         </FormControl>
         <FormLabel className="text-sm font-normal">
           I agree to Prizecho's{" "}
-          <Link href="/terms" className="text-primary hover:underline">
-            Terms of Service
+          <Link href="/terms-and-policies" className="text-primary hover:underline">
+            Terms and policies
           </Link>{" "}
-          and{" "}
-          <Link href="/privacy" className="text-primary hover:underline">
-            Privacy Policy
-          </Link>
         </FormLabel>
       </div>
       <FormMessage />
