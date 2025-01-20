@@ -11,7 +11,8 @@ import {
   Bell, 
   Lock,
   Edit,
-  ChevronRight
+  ChevronRight,
+  Trash2
 } from 'lucide-react';
 
 interface UserData {
@@ -37,6 +38,7 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchUserData();
@@ -138,6 +140,50 @@ const ProfilePage = () => {
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update profile');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      'Are you absolutely sure? This action will schedule your account for deletion after 30 days. During this period, your account will be deactivated and you can reactivate it by contacting customer support. After 30 days, all your data will be permanently deleted.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setIsDeleting(true);
+      const token = getAuthToken();
+      if (!token) {
+        handleAuthError();
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/delete-account/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (response.status === 401) {
+        handleAuthError();
+        return;
+      }
+
+      if (!response.ok) {
+        const errorData: APIError = await response.json();
+        throw new Error(errorData.message || 'Failed to delete account');
+      }
+
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      router.push('/');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete account');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -269,28 +315,47 @@ const ProfilePage = () => {
                 </form>
               </div>
 
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h4 className="font-semibold mb-4">Preferences</h4>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Email Notifications</p>
-                      <p className="text-sm text-gray-500">Receive order updates</p>
+              <div className="space-y-6">
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                  <h4 className="font-semibold mb-4">Preferences</h4>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Email Notifications</p>
+                        <p className="text-sm text-gray-500">Receive order updates</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" defaultChecked />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-myColor"></div>
+                      </label>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-myColor"></div>
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Marketing Emails</p>
+                        <p className="text-sm text-gray-500">Receive offers and updates</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" className="sr-only peer" />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-myColor"></div>
+                      </label>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Marketing Emails</p>
-                      <p className="text-sm text-gray-500">Receive offers and updates</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-myColor"></div>
-                    </label>
+                </div>
+
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                  <h4 className="font-semibold mb-4 text-red-600">Danger Zone</h4>
+                  <div className="space-y-4">
+                    <button
+                      onClick={handleDeleteAccount}
+                      disabled={isDeleting}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 text-red-600 border border-red-600 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Trash2 size={20} />
+                      {isDeleting ? 'Deleting...' : 'Delete Account'}
+                    </button>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Once you delete your account, there is no going back. Please be certain.
+                    </p>
                   </div>
                 </div>
               </div>
