@@ -3,14 +3,15 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { APIErrorHandler } from "@/lib/api/error-handler";
 
 export function PendingVerification() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
   const [isVerified, setIsVerified] = useState(false);
+  const [isResendDisabled, setIsResendDisabled] = useState(false);
   const router = useRouter();
 
-  // Rest of your component code remains the same...
   const resendVerificationEmail = async (email: string) => {
     if (!email) {
       toast.error("No email address provided");
@@ -30,16 +31,38 @@ export function PendingVerification() {
       });
 
       const data = await response.json();
-      console.log("Resend verification response:", data);
+      console.log("Response status:", response.status);
+      console.log("Response data:", data);
 
-      if (response.ok) {
-        toast.success("A new verification email has been sent!");
-      } else {
-        toast.error(data.message || "Failed to send verification email");
+      if (!response.ok) {
+        // Handle rate limiting specifically
+        if (response.status === 429) {
+          console.log("Rate limit hit");
+          setIsResendDisabled(true);
+          const waitMinutes = data.detail?.extra?.wait_minutes || 60;
+          toast.error(`Too many attempts. Please wait ${waitMinutes} minutes before trying again.`);
+          
+          // Re-enable after wait time
+          setTimeout(() => {
+            setIsResendDisabled(false);
+            toast.success("You can now resend the verification email");
+          }, waitMinutes * 60 * 1000);
+          return;
+        }
+
+        // Handle other errors
+        const error = APIErrorHandler.getErrorMessage(data);
+        toast.error(error.message);
+        return;
       }
+
+      // Success case
+      toast.success("A new verification email has been sent!");
+
     } catch (error) {
       console.error('Error sending verification email:', error);
-      toast.error("Failed to send verification email");
+      const processedError = APIErrorHandler.getErrorMessage(error);
+      toast.error(processedError.message);
     }
   };
 
@@ -49,12 +72,12 @@ export function PendingVerification() {
       return;
     }
 
-    // Send verification email as soon as component mounts with email
+    // Initial verification email send
     (async () => {
       await resendVerificationEmail(email);
     })();
 
-    // Set up verification status check
+    // Status check
     const checkVerification = async () => {
       try {
         const response = await fetch(
@@ -67,37 +90,36 @@ export function PendingVerification() {
           }
         );
 
-        if (response.ok) {
-          const data = await response.json();
-          setIsVerified(data.isVerified);
-          
-          if (data.isVerified) {
-            toast.success("Email verified successfully!");
-            setTimeout(() => {
-              router.push("/login");
-            }, 3000);
-          }
+        const data = await response.json();
+        console.log("Verification check response:", data);
+
+        if (!response.ok) {
+          const error = APIErrorHandler.getErrorMessage(data);
+          toast.error(error.message);
+          return;
+        }
+
+        setIsVerified(data.isVerified);
+        
+        if (data.isVerified) {
+          toast.success("Email verified successfully!");
+          setTimeout(() => {
+            router.push("/login");
+          }, 3000);
         }
       } catch (error) {
         console.error("Error checking verification status:", error);
+        const processedError = APIErrorHandler.getErrorMessage(error);
+        toast.error(processedError.message);
       }
     };
 
     // Check immediately and then every 5 seconds
     checkVerification();
-    const interval = setInterval(checkVerification, 5000);
+    const interval = setInterval(checkVerification, 500000);
 
     return () => clearInterval(interval);
   }, [email, router]);
-
-  // Add a manual resend button
-  const handleManualResend = () => {
-    if (email) {
-      resendVerificationEmail(email);
-    } else {
-      toast.error("No email address available");
-    }
-  };
 
   if (isVerified) {
     return (
@@ -128,10 +150,18 @@ export function PendingVerification() {
         )}
       </p>
       <button
-        onClick={handleManualResend}
-        className="mt-4 rounded-md bg-myColor px-6 py-2 text-white transition hover:bg-myColor/90"
+        onClick={() => email && resendVerificationEmail(email)}
+        disabled={isResendDisabled}
+        className={`mt-4 rounded-md px-6 py-2 text-white transition ${
+          isResendDisabled 
+            ? 'bg-gray-400 cursor-not-allowed' 
+            : 'bg-myColor hover:bg-myColor/90'
+        }`}
       >
-        Resend Verification Email
+        {isResendDisabled 
+          ? "Please wait before resending" 
+          : "Resend Verification Email"
+        }
       </button>
     </div>
   );

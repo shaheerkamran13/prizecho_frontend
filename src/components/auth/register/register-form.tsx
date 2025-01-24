@@ -17,7 +17,7 @@ import { RegisterSchema } from "@/lib/schemas/userschema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
   AiOutlineEye,
@@ -33,6 +33,8 @@ export const RegisterForm = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [isPending, startTransition] = useTransition();
+  const [isDisabled, setIsDisabled] = useState(false);
+  const [disableEndTime, setDisableEndTime] = useState<number | null>(null);
   const router = useRouter();
 
   const form = useForm<z.infer<typeof RegisterSchema>>({
@@ -44,10 +46,40 @@ export const RegisterForm = () => {
       email: "",
       password: "",
       confirmPassword: "",
+      terms_agreed: false
     },
   });
 
-  // register-form.tsx
+  // Handle rate limiting timer
+  useEffect(() => {
+    if (disableEndTime) {
+      const now = Date.now();
+      if (now < disableEndTime) {
+        setIsDisabled(true);
+        const timeout = setTimeout(() => {
+          setIsDisabled(false);
+          setDisableEndTime(null);
+          toast.success("You can now try registering again");
+        }, disableEndTime - now);
+
+        // Update button text every minute
+        const intervalId = setInterval(() => {
+          const timeLeft = Math.ceil((disableEndTime - Date.now()) / 60000);
+          if (timeLeft <= 0) {
+            clearInterval(intervalId);
+          }
+        }, 60000);
+
+        return () => {
+          clearTimeout(timeout);
+          clearInterval(intervalId);
+        };
+      } else {
+        setIsDisabled(false);
+        setDisableEndTime(null);
+      }
+    }
+  }, [disableEndTime]);
 
   const onSubmit = async (values: z.infer<typeof RegisterSchema>) => {
     setError("");
@@ -59,6 +91,15 @@ export const RegisterForm = () => {
       if (result.error) {
         setError(result.error);
         toast.error(result.error);
+
+        // Handle rate limiting
+        if (result.errorDetails?.code === 'REGISTRATION_THROTTLED' || 
+            result.errorDetails?.code === 'RATE_LIMIT_EXCEEDED') {
+          setIsDisabled(true);
+          // Use the exact wait time from backend or fallback to default
+          const waitTime = result.errorDetails.disableTime || 3600000; // Default 1 hour
+          setDisableEndTime(Date.now() + waitTime);
+        }
         return;
       }
   
@@ -66,9 +107,27 @@ export const RegisterForm = () => {
         form.reset();
         setSuccess(result.success);
         toast.success("Registration successful! Please check your email.");
-        router.push(`/verify?email=${encodeURIComponent(values.email)}`);
+        router.push(`/verify/pending?email=${encodeURIComponent(values.email)}`);
       }
     });
+  };
+
+  const getButtonText = () => {
+    if (isPending) {
+      return (
+        <>
+          <AiOutlineLoading3Quarters className="mr-2 h-4 w-4 animate-spin" />
+          Creating account...
+        </>
+      );
+    }
+    
+    if (isDisabled && disableEndTime) {
+      const timeLeft = Math.ceil((disableEndTime - Date.now()) / 60000);
+      return `Try again in ${timeLeft} minute${timeLeft === 1 ? '' : 's'}`;
+    }
+
+    return "Create account";
   };
 
   return (
@@ -85,7 +144,7 @@ export const RegisterForm = () => {
                   <FormControl>
                     <Input
                       {...field}
-                      disabled={isPending}
+                      disabled={isPending || isDisabled}
                       placeholder="First name"
                       type="text"
                       autoComplete="given-name"
@@ -104,7 +163,7 @@ export const RegisterForm = () => {
                   <FormControl>
                     <Input
                       {...field}
-                      disabled={isPending}
+                      disabled={isPending || isDisabled}
                       placeholder="Last name"
                       type="text"
                       autoComplete="family-name"
@@ -125,10 +184,10 @@ export const RegisterForm = () => {
                 <FormControl>
                   <Input
                     {...field}
-                    disabled={isPending}
+                    disabled={isPending || isDisabled}
                     placeholder="Choose a username"
                     type="text"
-                    autoComplete="username"
+                    autoComplete="off"
                   />
                 </FormControl>
                 <FormMessage />
@@ -145,10 +204,11 @@ export const RegisterForm = () => {
                 <FormControl>
                   <Input
                     {...field}
-                    disabled={isPending}
+                    disabled={isPending || isDisabled}
                     placeholder="email@example.com"
                     type="email"
                     autoComplete="email"
+                    inputMode="email"
                   />
                 </FormControl>
                 <FormMessage />
@@ -166,15 +226,15 @@ export const RegisterForm = () => {
                   <div className="relative">
                     <Input
                       {...field}
-                      disabled={isPending}
+                      disabled={isPending || isDisabled}
                       placeholder="Create a password"
                       type={showPassword ? "text" : "password"}
                       autoComplete="new-password"
                     />
                     <button
                       type="button"
-                      onClick={() => !isPending && setShowPassword(prev => !prev)}
-                      disabled={isPending}
+                      onClick={() => !isPending && !isDisabled && setShowPassword(prev => !prev)}
+                      disabled={isPending || isDisabled}
                       className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-500"
                     >
                       {showPassword ? (
@@ -200,15 +260,15 @@ export const RegisterForm = () => {
                   <div className="relative">
                     <Input
                       {...field}
-                      disabled={isPending}
+                      disabled={isPending || isDisabled}
                       placeholder="Confirm your password"
                       type={showConfirmPassword ? "text" : "password"}
                       autoComplete="new-password"
                     />
                     <button
                       type="button"
-                      onClick={() => !isPending && setShowConfirmPassword(prev => !prev)}
-                      disabled={isPending}
+                      onClick={() => !isPending && !isDisabled && setShowConfirmPassword(prev => !prev)}
+                      disabled={isPending || isDisabled}
                       className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-500"
                     >
                       {showConfirmPassword ? (
@@ -224,49 +284,47 @@ export const RegisterForm = () => {
             )}
           />
 
-<FormField
-  control={form.control}
-  name="terms_agreed"
-  render={({ field }) => (
-    <FormItem>
-      <div className="flex items-start space-x-2">
-        <FormControl>
-          <input
-            type="checkbox"
-            checked={field.value}
-            onChange={field.onChange}
-            className="mt-1"
+          <FormField
+            control={form.control}
+            name="terms_agreed"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-start space-x-2">
+                  <FormControl>
+                    <input
+                      type="checkbox"
+                      checked={field.value}
+                      onChange={field.onChange}
+                      disabled={isPending || isDisabled}
+                      className="mt-1"
+                    />
+                  </FormControl>
+                  <FormLabel className="text-sm font-normal">
+                    I agree to Prizecho's{" "}
+                    <Link href="/terms-and-policies" className="text-primary hover:underline">
+                      Terms and policies
+                    </Link>{" "}
+                  </FormLabel>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </FormControl>
-        <FormLabel className="text-sm font-normal">
-          I agree to Prizecho's{" "}
-          <Link href="/terms-and-policies" className="text-primary hover:underline">
-            Terms and policies
-          </Link>{" "}
-        </FormLabel>
-      </div>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
         </div>
 
         <FormError message={error} />
         <FormSuccess message={success} />
 
         <Button
-          disabled={isPending}
+          disabled={isPending || isDisabled}
           type="submit"
-          className="w-full rounded-md bg-accent py-2 text-center font-medium bg-myColor text-white hover:bg-myColor"
+          className={`w-full rounded-md py-2 text-center font-medium text-white transition-all ${
+            isDisabled 
+              ? 'bg-gray-400 cursor-not-allowed hover:bg-gray-400'
+              : 'bg-myColor hover:bg-myColor/90'
+          }`}
         >
-          {isPending ? (
-            <>
-              <AiOutlineLoading3Quarters className="mr-2 h-4 w-4 animate-spin" />
-              Creating account...
-            </>
-          ) : (
-            "Create account"
-          )}
+          {getButtonText()}
         </Button>
 
         <p className="w-full text-center text-xs font-medium text-textPrimary">

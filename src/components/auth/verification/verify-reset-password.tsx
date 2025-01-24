@@ -1,6 +1,6 @@
 "use client";
-import { verify } from "@/src/app/actions/verify";
-import UpdatePassword from "@/src/components/auth/update-password/update-password";
+import { verify } from "@/app/actions/verify";
+import UpdatePassword from "@/components/auth/update-password/update-password";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ImCancelCircle } from "react-icons/im";
@@ -19,20 +19,26 @@ const VerifyResetPassword: React.FC<VerifyEmailProps> = ({ token }) => {
     const verifyToken = async () => {
       if (token) {
         try {
-          const result = await verify(token); // verify email server action.
-          setVerified(result);
-          if (result === true) {
+          const result = await verify(token);
+          setVerified(result.success); // Using the success property
+          if (result.success) {
             localStorage.setItem("emailVerified", "true");
-            toast.success("Email verified!");
+            toast.success(result.message || "Email verified!");
+          } else {
+            setError(result.message || "Verification failed");
+            toast.error(result.message || "Verification failed");
           }
         } catch (error) {
           toast.error("Verification failed. Please try again.")
           setError("Verification failed. Please try again.");
+          setVerified(false);
         } finally {
           setIsLoading(false);
         }
       } else {
         setIsLoading(false);
+        setVerified(false);
+        setError("No verification token provided");
       }
     };
 
@@ -127,7 +133,7 @@ const VerificationFailedComponent = () => (
       aria-label="Reset password"
       className="w-full rounded-md bg-accent py-2 text-center font-medium text-white hover:bg-[#18c781]"
     >
-      Reeset Password
+      Reset Password
     </Link>
   </div>
 );

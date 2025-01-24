@@ -1,8 +1,9 @@
 "use client";
+
 import { useSearchParams } from "next/navigation";
-import { CardWrapper } from "@/src/components/auth/card-wrapper";
-import VerifyEmail from "./verify-email";
-import UpdatePassword from "@/src/components/auth/update-password/update-password";
+import { CardWrapper } from "@/components/auth/card-wrapper";
+import { VerifyEmail } from "./verify-email";
+import UpdatePassword from "@/components/auth/update-password/update-password";
 
 const Verify = () => {
   const searchParams = useSearchParams();
@@ -15,8 +16,8 @@ const Verify = () => {
     return (
       <div className="flex items-center justify-center">
         <CardWrapper headerLabel="Update Password">
-        <div className="p-4 mobileM:p-2">
-          <UpdatePassword token={token} />
+          <div className="p-4 mobileM:p-2">
+            <UpdatePassword token={token} />
           </div>
         </CardWrapper>
       </div>

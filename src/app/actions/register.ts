@@ -1,7 +1,9 @@
 // src/app/actions/register.ts
 "use server";
+
 import * as z from "zod";
 import { RegisterSchema } from "@/lib/schemas/userschema";
+import { APIErrorHandler } from "@/lib/api/error-handler";
 
 export const register = async (values: z.infer<typeof RegisterSchema>) => {
   try {
@@ -13,7 +15,6 @@ export const register = async (values: z.infer<typeof RegisterSchema>) => {
 
     const { email, password, firstName, lastName, username, confirmPassword } = validatedFields.data;
 
-    // Log the request payload for debugging
     console.log("Sending registration request with:", {
       email,
       username,
@@ -39,44 +40,33 @@ export const register = async (values: z.infer<typeof RegisterSchema>) => {
         terms_agreed: values.terms_agreed,  
       }),
     });
-
+    
     const data = await response.json();
-
-    // Log response data for debugging
     console.log("Registration response:", data);
-
+    
     if (!response.ok) {
-      // Check if the error has a detail object with message
-      if (data.detail && data.detail.message) {
-        return { error: data.detail.message };
-      }
+      const processedError = APIErrorHandler.getErrorMessage({
+        ...data,
+        status: response.status
+      });
 
-      // Check for specific field errors
-      if (data.message) {
-        return { error: data.message };
-      }
-
-      // Handle field-specific errors
-      const fieldErrors = ['username', 'email', 'password', 'non_field_errors'];
-      for (const field of fieldErrors) {
-        if (data[field] && data[field].length > 0) {
-          return { error: data[field][0] };
-        }
-      }
-
-      // Fallback error message
-      return { error: "Registration failed. Please try again." };
+      return { 
+        error: processedError.message,
+        errorDetails: processedError
+      };
     }
-
+    
     return { 
       success: "Registration successful! Please check your email to verify your account.",
       data: { email } 
     };
-
+    
   } catch (error) {
     console.error("Registration error:", error);
+    const processedError = APIErrorHandler.getErrorMessage(error);
     return { 
-      error: "An error occurred during registration. Please try again later." 
+      error: processedError.message,
+      errorDetails: processedError
     };
   }
-};
+}
