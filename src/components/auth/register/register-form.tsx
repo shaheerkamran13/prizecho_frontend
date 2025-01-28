@@ -1,6 +1,6 @@
 "use client";
 
-import { register } from "@/app/actions/register";
+import { useAuth } from "@/lib/context/auth-context";
 import { Button } from "../ui/button";
 import {
   Form,
@@ -17,7 +17,7 @@ import { RegisterSchema } from "@/lib/schemas/userschema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import {
   AiOutlineEye,
@@ -28,11 +28,12 @@ import { toast } from "sonner";
 import * as z from "zod";
 
 export const RegisterForm = () => {
+  const { register } = useAuth();
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const [isDisabled, setIsDisabled] = useState(false);
   const [disableEndTime, setDisableEndTime] = useState<number | null>(null);
   const router = useRouter();
@@ -50,7 +51,6 @@ export const RegisterForm = () => {
     },
   });
 
-  // Handle rate limiting timer
   useEffect(() => {
     if (disableEndTime) {
       const now = Date.now();
@@ -62,18 +62,7 @@ export const RegisterForm = () => {
           toast.success("You can now try registering again");
         }, disableEndTime - now);
 
-        // Update button text every minute
-        const intervalId = setInterval(() => {
-          const timeLeft = Math.ceil((disableEndTime - Date.now()) / 60000);
-          if (timeLeft <= 0) {
-            clearInterval(intervalId);
-          }
-        }, 60000);
-
-        return () => {
-          clearTimeout(timeout);
-          clearInterval(intervalId);
-        };
+        return () => clearTimeout(timeout);
       } else {
         setIsDisabled(false);
         setDisableEndTime(null);
@@ -82,34 +71,42 @@ export const RegisterForm = () => {
   }, [disableEndTime]);
 
   const onSubmit = async (values: z.infer<typeof RegisterSchema>) => {
-    setError("");
-    setSuccess("");
-    
-    startTransition(async () => {
+    try {
+      setError("");
+      setSuccess("");
+      setIsPending(true);
+
       const result = await register(values);
-  
+
       if (result.error) {
         setError(result.error);
-        toast.error(result.error);
+        toast.error(result.message || result.error);
 
-        // Handle rate limiting
-        if (result.errorDetails?.code === 'REGISTRATION_THROTTLED' || 
-            result.errorDetails?.code === 'RATE_LIMIT_EXCEEDED') {
-          setIsDisabled(true);
-          // Use the exact wait time from backend or fallback to default
-          const waitTime = result.errorDetails.disableTime || 3600000; // Default 1 hour
+        if (result.error === 'REGISTRATION_THROTTLED' || 
+            result.error === 'RATE_LIMIT_EXCEEDED') {
+          const waitTime = result.extra?.wait_minutes 
+            ? result.extra.wait_minutes * 60 * 1000 
+            : 3600000; // Default 1 hour
           setDisableEndTime(Date.now() + waitTime);
         }
         return;
       }
-  
+
       if (result.success) {
         form.reset();
         setSuccess(result.success);
         toast.success("Registration successful! Please check your email.");
-        router.push(`/verify/pending?email=${encodeURIComponent(values.email)}`);
+        
+        if (result.data?.email) {
+          router.push(`/verify/pending?email=${encodeURIComponent(result.data.email)}`);
+        }
       }
-    });
+    } catch (error: any) {
+      setError('Registration failed. Please try again.');
+      toast.error('An unexpected error occurred');
+    } finally {
+      setIsPending(false);
+    }
   };
 
   const getButtonText = () => {
@@ -208,7 +205,6 @@ export const RegisterForm = () => {
                     placeholder="email@example.com"
                     type="email"
                     autoComplete="email"
-                    inputMode="email"
                   />
                 </FormControl>
                 <FormMessage />
@@ -303,7 +299,7 @@ export const RegisterForm = () => {
                     I agree to Prizecho's{" "}
                     <Link href="/terms-and-policies" className="text-primary hover:underline">
                       Terms and policies
-                    </Link>{" "}
+                    </Link>
                   </FormLabel>
                 </div>
                 <FormMessage />

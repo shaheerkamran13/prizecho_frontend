@@ -1,11 +1,10 @@
 "use client";
 
-import { verify } from "@/app/actions/verify";
+import { useAuth } from "@/lib/context/auth-context";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { APIErrorHandler } from "@/lib/api/error-handler";
 
 interface VerificationState {
   status: 'loading' | 'success' | 'error';
@@ -16,6 +15,7 @@ interface VerificationState {
 }
 
 export function VerifyEmail({ token }: { token: string }) {
+  const { verifyEmail } = useAuth();
   const [verificationState, setVerificationState] = useState<VerificationState>({
     status: 'loading'
   });
@@ -45,7 +45,7 @@ export function VerifyEmail({ token }: { token: string }) {
   }, [verificationState.disableEndTime]);
 
   useEffect(() => {
-    const verifyEmail = async () => {
+    const verifyEmailToken = async () => {
       try {
         if (!token) {
           setVerificationState({
@@ -55,12 +55,12 @@ export function VerifyEmail({ token }: { token: string }) {
           return;
         }
 
-        const result = await verify(token);
+        const result = await verifyEmail(token);
 
         if (result.success) {
           setVerificationState({
             status: 'success',
-            message: "Your email has been verified. You can now log in to your account.",
+            message: result.message || "Your email has been verified. You can now log in to your account.",
             email: result.email
           });
           toast.success("Email verified successfully!");
@@ -70,9 +70,9 @@ export function VerifyEmail({ token }: { token: string }) {
           }, 3000);
         } else {
           // Handle rate limiting
-          if (result.error?.code === "EMAIL_VERIFICATION_THROTTLED" || 
-              result.error?.code === "RATE_LIMIT_EXCEEDED") {
-            const waitMinutes = result.error.extra?.wait_minutes || 60;
+          if (result.error === "EMAIL_VERIFICATION_THROTTLED" || 
+              result.error === "RATE_LIMIT_EXCEEDED") {
+            const waitMinutes = 60; // Default to 60 minutes if not specified
             setVerificationState({
               status: 'error',
               email: result.email,
@@ -82,7 +82,7 @@ export function VerifyEmail({ token }: { token: string }) {
             });
           }
           // Handle invalid/expired link
-          else if (result.error?.code === "USER_INVALID_VERIFICATION_LINK") {
+          else if (result.error === "USER_INVALID_VERIFICATION_LINK") {
             setVerificationState({
               status: 'error',
               message: "This verification link has expired. Please request a new one.",
@@ -93,7 +93,7 @@ export function VerifyEmail({ token }: { token: string }) {
           else {
             setVerificationState({
               status: 'error',
-              message: "Unable to verify email. Please try again.",
+              message: result.message || "Unable to verify email. Please try again.",
               email: result.email
             });
           }
@@ -107,8 +107,8 @@ export function VerifyEmail({ token }: { token: string }) {
       }
     };
 
-    verifyEmail();
-  }, [token, router]);
+    verifyEmailToken();
+  }, [token, router, verifyEmail]);
 
   if (verificationState.status === 'loading') {
     return (

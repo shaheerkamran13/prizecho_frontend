@@ -1,45 +1,33 @@
 "use client";
 
+import { useAuth } from "@/lib/context/auth-context";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { APIErrorHandler } from "@/lib/api/error-handler";
 
 export function PendingVerification() {
+  const { resendVerification } = useAuth();
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
   const [isVerified, setIsVerified] = useState(false);
   const [isResendDisabled, setIsResendDisabled] = useState(false);
   const router = useRouter();
 
-  const resendVerificationEmail = async (email: string) => {
+  const handleResendVerification = async () => {
     if (!email) {
       toast.error("No email address provided");
       return;
     }
 
     try {
-      console.log("Attempting to resend verification email to:", email);
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_AUTH_SERVER_URL}/send-verification/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-        cache: 'no-store'
-      });
+      const result = await resendVerification(email);
 
-      const data = await response.json();
-      console.log("Response status:", response.status);
-      console.log("Response data:", data);
-
-      if (!response.ok) {
-        // Handle rate limiting specifically
-        if (response.status === 429) {
-          console.log("Rate limit hit");
+      if (result.error) {
+        // Handle rate limiting
+        if (result.error === 'EMAIL_VERIFICATION_THROTTLED' || 
+            result.error === 'RATE_LIMIT_EXCEEDED') {
           setIsResendDisabled(true);
-          const waitMinutes = data.detail?.extra?.wait_minutes || 60;
+          const waitMinutes = 60; // Default to 60 minutes
           toast.error(`Too many attempts. Please wait ${waitMinutes} minutes before trying again.`);
           
           // Re-enable after wait time
@@ -50,9 +38,7 @@ export function PendingVerification() {
           return;
         }
 
-        // Handle other errors
-        const error = APIErrorHandler.getErrorMessage(data);
-        toast.error(error.message);
+        toast.error(result.message || "Failed to send verification email");
         return;
       }
 
@@ -61,8 +47,7 @@ export function PendingVerification() {
 
     } catch (error) {
       console.error('Error sending verification email:', error);
-      const processedError = APIErrorHandler.getErrorMessage(error);
-      toast.error(processedError.message);
+      toast.error("Failed to send verification email");
     }
   };
 
@@ -73,11 +58,9 @@ export function PendingVerification() {
     }
 
     // Initial verification email send
-    (async () => {
-      await resendVerificationEmail(email);
-    })();
+    handleResendVerification();
 
-    // Status check
+    // Check verification status
     const checkVerification = async () => {
       try {
         const response = await fetch(
@@ -91,11 +74,9 @@ export function PendingVerification() {
         );
 
         const data = await response.json();
-        console.log("Verification check response:", data);
 
         if (!response.ok) {
-          const error = APIErrorHandler.getErrorMessage(data);
-          toast.error(error.message);
+          toast.error(data.message || "Failed to check verification status");
           return;
         }
 
@@ -109,14 +90,12 @@ export function PendingVerification() {
         }
       } catch (error) {
         console.error("Error checking verification status:", error);
-        const processedError = APIErrorHandler.getErrorMessage(error);
-        toast.error(processedError.message);
       }
     };
 
     // Check immediately and then every 5 seconds
     checkVerification();
-    const interval = setInterval(checkVerification, 500000);
+    const interval = setInterval(checkVerification, 5000);
 
     return () => clearInterval(interval);
   }, [email, router]);
@@ -150,7 +129,7 @@ export function PendingVerification() {
         )}
       </p>
       <button
-        onClick={() => email && resendVerificationEmail(email)}
+        onClick={handleResendVerification}
         disabled={isResendDisabled}
         className={`mt-4 rounded-md px-6 py-2 text-white transition ${
           isResendDisabled 

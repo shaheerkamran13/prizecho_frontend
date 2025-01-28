@@ -7,24 +7,24 @@ import { IoClose } from "react-icons/io5";
 import { PendingVerification } from "./pendingverification";
 
 export function PendingVerificationDialog() {
-  const router = useRouter();
+ const router = useRouter();
 
-  return (
-    <Dialog.Root open={true} onOpenChange={() => router.push("/")}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" />
-        <Dialog.Content
-          aria-describedby={undefined}
-          className="fixed left-1/2 top-1/2 z-50 max-h-[85vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 transform overflow-y-auto rounded-lg bg-background p-6"
-        >
-          <PendingVerification />
-          <Dialog.Close asChild>
-            <button className="absolute right-4 top-4 p-1" aria-label="Close">
-              <IoClose />
-            </button>
-          </Dialog.Close>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
-  );
+ return (
+   <Dialog.Root open={true} onOpenChange={() => router.push("/")}>
+     <Dialog.Portal>
+       <Dialog.Overlay className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" />
+       <Dialog.Content
+         aria-describedby={undefined}
+         className="fixed left-1/2 top-1/2 z-50 max-h-[85vh] w-full max-w-md -translate-x-1/2 -translate-y-1/2 transform overflow-y-auto rounded-lg bg-background p-6"
+       >
+         <PendingVerification />
+         <Dialog.Close asChild>
+           <button className="absolute right-4 top-4 p-1" aria-label="Close">
+             <IoClose />
+           </button>
+         </Dialog.Close>
+       </Dialog.Content>
+     </Dialog.Portal>
+   </Dialog.Root>
+ );
 }

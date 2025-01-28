@@ -1,6 +1,6 @@
 "use client";
 
-import { login } from "@/app/actions/login";
+import { useAuth } from "@/lib/context/auth-context";
 import { Button } from "../ui/button";
 import {
   Form,
@@ -10,7 +10,6 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
-import { zodResolver } from '@hookform/resolvers/zod';
 import { FormError } from "../ui/form-error";
 import { FormSuccess } from "../ui/form-success";
 import { Input } from "../ui/input";
@@ -19,6 +18,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AiOutlineEye,
   AiOutlineEyeInvisible,
@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import * as z from "zod";
 
 export const LoginForm = () => {
+  const { login } = useAuth();
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useState(false);
@@ -50,9 +51,10 @@ export const LoginForm = () => {
 
       const result = await login(values);
 
-      if (result.error === "unverified_email" && result.email) {
+      // Handle unverified email case
+      if (result.error === "unverified_email" && result.data?.email) {
         setError("Unverified email. A new verification email has been sent.");
-        router.push(`/verify/pending?email=${result.email}`);
+        router.push(`/verify/pending?email=${result.data.email}`);
         return;
       }
 
@@ -64,12 +66,6 @@ export const LoginForm = () => {
       }
 
       if (result.success) {
-        // Store tokens
-        if (result.data?.tokens) {
-          localStorage.setItem('access_token', result.data.tokens.access);
-          localStorage.setItem('refresh_token', result.data.tokens.refresh);
-        }
-
         form.reset();
         setSuccess(result.success);
         toast.success("Welcome back! You're now logged in.");

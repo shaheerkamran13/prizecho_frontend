@@ -1,3 +1,4 @@
+// src/app/login/page.tsx
 import { CardWrapper } from "@/components/auth/card-wrapper";
 import { LoginForm } from "@/components/auth/login/login-form";
 import type { Metadata } from "next";
@@ -5,7 +6,7 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Login",
-  description: `Access your Panaversity account. Login to manage your courses, track your learning progress, and stay connected with the latest AI-powered learning opportunities.`,
+  description: `Access your Prizecho account. Login to manage your account.`,
 };
 
 const LoginPage = () => {
@@ -20,7 +21,6 @@ const LoginPage = () => {
           </CardWrapper>
         </div>
       </main>
-     
     </>
   );
 };

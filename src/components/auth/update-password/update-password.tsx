@@ -1,6 +1,6 @@
 "use client";
 
-import { confirmPasswordReset } from "@/app/actions/recover-password";
+import { useAuth } from "@/lib/context/auth-context";
 import { UpdatePasswordSchema } from "@/lib/schemas/userschema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -27,6 +27,7 @@ interface UpdatePasswordProps {
 }
 
 export default function UpdatePassword({ token }: UpdatePasswordProps) {
+  const { confirmPasswordReset } = useAuth();
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, setIsPending] = useState(false);
@@ -42,19 +43,19 @@ export default function UpdatePassword({ token }: UpdatePasswordProps) {
   });
 
   const onSubmit = async (values: z.infer<typeof UpdatePasswordSchema>) => {
-    setError("");
-    setSuccess("");
-    setIsPending(true);
-
     try {
-      const response = await confirmPasswordReset(values);
+      setError("");
+      setSuccess("");
+      setIsPending(true);
+
+      const result = await confirmPasswordReset(values);
       
-      if (response.error) {
-        setError(response.error);
-        toast.error(response.error);
-      } else if (response.success) {
-        setSuccess(response.message);
-        toast.success(response.message);
+      if (result.error) {
+        setError(result.error);
+        toast.error(result.error);
+      } else if (result.success) {
+        setSuccess(result.message);
+        toast.success(result.message);
         
         // Set flag for dialog close
         localStorage.setItem("updatePassword", "true");

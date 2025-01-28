@@ -1,6 +1,6 @@
 "use client";
 
-import { resetPassword } from "@/app/actions/recover-password";
+import { useAuth } from "@/lib/context/auth-context";
 import { RecoverPasswordSchema } from "@/lib/schemas/userschema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -23,6 +23,7 @@ import { FormSuccess } from "../ui/form-success";
 import { Input } from "../ui/input";
 
 export default function ResetPassword() {
+  const { requestPasswordReset } = useAuth();
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, setIsPending] = useState(false);
@@ -35,6 +36,37 @@ export default function ResetPassword() {
       email: "",
     },
   });
+
+  const onSubmit = async (values: z.infer<typeof RecoverPasswordSchema>) => {
+    try {
+      setError("");
+      setSuccess("");
+      setUnverifiedEmail(null);
+      setIsPending(true);
+
+      const result = await requestPasswordReset(values.email);
+      
+      if (result.error) {
+        setError(result.error);
+        if (result.code === 'unverified_email') {
+          setUnverifiedEmail(values.email);
+          setError("Please verify your email address before resetting your password.");
+          toast.error("Email not verified");
+        } else {
+          toast.error(result.message || result.error);
+        }
+      } else {
+        setSuccess(result.message);
+        toast.success("Check your email for the password reset link");
+        form.reset();
+      }
+    } catch (error) {
+      setError("Something went wrong. Please try again.");
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsPending(false);
+    }
+  };
 
   const handleSendVerification = async () => {
     if (!unverifiedEmail) return;
@@ -56,35 +88,6 @@ export default function ResetPassword() {
       }
     } catch (error) {
       toast.error("Failed to send verification email. Please try again.");
-    }
-  };
-
-  const onSubmit = async (values: z.infer<typeof RecoverPasswordSchema>) => {
-    setError("");
-    setSuccess("");
-    setUnverifiedEmail(null);
-    setIsPending(true);
-
-    try {
-      const response = await resetPassword(values);
-      
-      if (response.error) {
-        setError(response.error);
-        toast.error(response.error);
-      } else if (response.code === 'unverified_email') {
-        setUnverifiedEmail(values.email);
-        setError("Please verify your email address before resetting your password.");
-        toast.error("Email not verified");
-      } else {
-        setSuccess(response.message);
-        toast.success("Check your email for the password reset link");
-        form.reset();
-      }
-    } catch (error) {
-      setError("Something went wrong. Please try again.");
-      toast.error("An unexpected error occurred");
-    } finally {
-      setIsPending(false);
     }
   };
 
