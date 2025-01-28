@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/lib/context/auth-context";
+import { useAuth } from "@/lib/context/UserAuthContext";
 import { RecoverPasswordSchema } from "@/lib/schemas/userschema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";

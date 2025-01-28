@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/lib/context/auth-context";
+import { useAuth } from "@/lib/context/UserAuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";

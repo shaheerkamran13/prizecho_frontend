@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/lib/context/auth-context";
+import { useAuth } from "@/lib/context/UserAuthContext";
 import { Button } from "../ui/button";
 import {
   Form,
