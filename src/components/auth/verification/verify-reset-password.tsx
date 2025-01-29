@@ -1,5 +1,6 @@
 "use client";
-import { verify } from "@/app/actions/verify";
+
+import { useAuth } from "@/lib/context/UserAuthContext";
 import UpdatePassword from "@/components/auth/update-password/update-password";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -11,6 +12,7 @@ type VerifyEmailProps = {
 };
 
 const VerifyResetPassword: React.FC<VerifyEmailProps> = ({ token }) => {
+  const { verifyEmail } = useAuth();
   const [verified, setVerified] = useState<null | boolean>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,8 +21,9 @@ const VerifyResetPassword: React.FC<VerifyEmailProps> = ({ token }) => {
     const verifyToken = async () => {
       if (token) {
         try {
-          const result = await verify(token);
-          setVerified(result.success); // Using the success property
+          const result = await verifyEmail(token);
+          setVerified(result.success ?? false); // Handle undefined case
+          
           if (result.success) {
             localStorage.setItem("emailVerified", "true");
             toast.success(result.message || "Email verified!");
@@ -43,7 +46,7 @@ const VerifyResetPassword: React.FC<VerifyEmailProps> = ({ token }) => {
     };
 
     verifyToken();
-  }, [token]);
+  }, [token, verifyEmail]);
 
   if (isLoading) {
     return <LoadingComponent />;

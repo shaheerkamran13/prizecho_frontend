@@ -2,6 +2,9 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { loadStripe, Stripe } from "@stripe/stripe-js";
+import { useAuth } from '@/lib/context/UserAuthContext';
+import { useRouter } from 'next/navigation';
+import { toast } from "sonner";
 
 // Initialize Stripe with the publishable key
 const stripePromise = loadStripe(
@@ -39,6 +42,9 @@ export default function CartModel() {
     },
   ]);
 
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+
   const handleRemoveItem = (id: number) => {
     setCartItems(cartItems.filter((item) => item.id !== id));
   };
@@ -51,19 +57,36 @@ export default function CartModel() {
   };
 
   const handleCheckout = async () => {
-    const stripe = (await stripePromise) as Stripe;
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
 
     try {
+      const stripe = await stripePromise;
+      if (!stripe) {
+        throw new Error('Stripe failed to initialize');
+      }
+
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items: cartItems }),
       });
 
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
       const { sessionId } = await response.json();
-      await stripe.redirectToCheckout({ sessionId });
+      const result = await stripe.redirectToCheckout({ sessionId });
+
+      if (result.error) {
+        toast.error(result.error.message || "Checkout failed");
+      }
     } catch (error) {
       console.error("Error during Stripe checkout:", error);
+      toast.error("Failed to initiate checkout. Please try again.");
     }
   };
 

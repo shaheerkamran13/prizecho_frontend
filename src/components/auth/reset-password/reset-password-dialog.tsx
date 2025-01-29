@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import ResetPassword from "./reset-password";
+import { useAuth } from "@/lib/context/UserAuthContext";
 
 export default function ResetPasswordDialog() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
@@ -20,6 +22,13 @@ export default function ResetPasswordDialog() {
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [router]);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/profile');
+    }
+  }, [isAuthenticated, router]);
 
   return (
     <Dialog.Root open={true} onOpenChange={() => router.back()}>

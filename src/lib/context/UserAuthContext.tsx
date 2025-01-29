@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, useCallback, ReactNode } from 'react';
-import { LoginSchema, RegisterSchema, UpdatePasswordSchema } from '@/lib/schemas/userschema'; // Added UpdatePasswordSchema
+import { createContext, useContext, useCallback, ReactNode, useState, useEffect } from 'react';
+import { LoginSchema, RegisterSchema, UpdatePasswordSchema } from '@/lib/schemas/userschema';
 import { fetchAPI } from '../api/config';
 import * as z from 'zod';
 
@@ -55,11 +55,41 @@ interface AuthContextType {
         message?: string;
     }>;
     logout: () => void;
+    isAuthenticated: boolean;
+    user: any | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [user, setUser] = useState<any | null>(null);
+
+    // Check auth status on mount and token change
+    useEffect(() => {
+        const token = localStorage.getItem('access_token');
+        setIsAuthenticated(!!token);
+        
+        // If token exists, fetch user data
+        if (token) {
+            fetchUserData(token);
+        }
+    }, []);
+
+    const fetchUserData = async (token: string) => {
+        try {
+            const response = await fetchAPI('/api/user/', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            setUser(response);
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+            setUser(null);
+        }
+    };
+
     const login = useCallback(async (values: z.infer<typeof LoginSchema>) => {
         try {
           const response = await fetchAPI('/api/token/', {
@@ -73,6 +103,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (response.access && response.refresh) {
             localStorage.setItem('access_token', response.access);
             localStorage.setItem('refresh_token', response.refresh);
+            setIsAuthenticated(true);
+            
+            if (response.user) {
+                setUser(response.user);
+            }
     
             return {
               success: 'Authenticated!',
@@ -252,6 +287,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const logout = useCallback(() => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        setIsAuthenticated(false);
+        setUser(null);
     }, []);
 
     return (
@@ -263,6 +300,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             logout,
             requestPasswordReset,
             confirmPasswordReset,
+            isAuthenticated,
+            user
         }}>
             {children}
         </AuthContext.Provider>

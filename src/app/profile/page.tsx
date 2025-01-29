@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/context/UserAuthContext';
 import { 
   User, 
   Package, 
@@ -33,6 +34,7 @@ const API_BASE_URL = 'http://localhost:8000';
 
 const ProfilePage = () => {
   const router = useRouter();
+  const { isAuthenticated, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,26 +43,20 @@ const ProfilePage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
     fetchUserData();
-  }, []);
-
-  const getAuthToken = () => {
-    const accessToken = localStorage.getItem('access_token');
-    return accessToken;
-  };
-
-  const handleAuthError = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    router.push('/login');
-  };
+  }, [isAuthenticated]);
 
   const fetchUserData = async () => {
     try {
-      const token = getAuthToken();
+      const token = localStorage.getItem('access_token');
       
       if (!token) {
-        handleAuthError();
+        logout();
+        router.push('/login');
         return;
       }
 
@@ -73,7 +69,8 @@ const ProfilePage = () => {
       });
 
       if (response.status === 401) {
-        handleAuthError();
+        logout();
+        router.push('/login');
         return;
       }
 
@@ -107,9 +104,10 @@ const ProfilePage = () => {
     if (!userData) return;
 
     try {
-      const token = getAuthToken();
+      const token = localStorage.getItem('access_token');
       if (!token) {
-        handleAuthError();
+        logout();
+        router.push('/login');
         return;
       }
 
@@ -127,7 +125,8 @@ const ProfilePage = () => {
       });
 
       if (response.status === 401) {
-        handleAuthError();
+        logout();
+        router.push('/login');
         return;
       }
 
@@ -152,9 +151,10 @@ const ProfilePage = () => {
 
     try {
       setIsDeleting(true);
-      const token = getAuthToken();
+      const token = localStorage.getItem('access_token');
       if (!token) {
-        handleAuthError();
+        logout();
+        router.push('/login');
         return;
       }
 
@@ -168,7 +168,8 @@ const ProfilePage = () => {
       });
 
       if (response.status === 401) {
-        handleAuthError();
+        logout();
+        router.push('/login');
         return;
       }
 
@@ -177,8 +178,7 @@ const ProfilePage = () => {
         throw new Error(errorData.message || 'Failed to delete account');
       }
 
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+      logout();
       router.push('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete account');
@@ -387,29 +387,29 @@ const ProfilePage = () => {
                       ${activeTab === item.id ? 
                         'bg-blue-50 text-myColor' : 
                         'text-gray-600 hover:bg-gray-50'}`}
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                    <ChevronRight 
-                      size={16} 
-                      className={`ml-auto transition-transform ${activeTab === item.id ? 'rotate-90' : ''}`}
-                    />
-                  </button>
-                ))}
-              </nav>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="md:col-span-9">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              {renderContent()}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default ProfilePage;
+                                        >
+                                          {item.icon}
+                                          <span>{item.label}</span>
+                                          <ChevronRight 
+                                            size={16} 
+                                            className={`ml-auto transition-transform ${activeTab === item.id ? 'rotate-90' : ''}`}
+                                          />
+                                        </button>
+                                      ))}
+                                    </nav>
+                                  </div>
+                                </div>
+                      
+                                {/* Main Content */}
+                                <div className="md:col-span-9">
+                                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                                    {renderContent()}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      };
+                      
+                      export default ProfilePage;

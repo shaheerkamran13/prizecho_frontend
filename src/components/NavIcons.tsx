@@ -5,21 +5,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import CartModel from './CartModel';
+import { useAuth } from '@/lib/context/UserAuthContext';
 
 export default function NavIcons() {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isCartOpen, setIsCartOpen] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-
+    const { logout, isAuthenticated } = useAuth(); // Get isAuthenticated from auth context
     const router = useRouter();
 
-    useEffect(() => {
-        const token = localStorage.getItem('access_token');
-        setIsLoggedIn(!!token);
-    }, []);
-
     const handleProfile = () => {
-        if (!isLoggedIn) {
+        if (!isAuthenticated) {
             router.push('/login');
             return;
         }
@@ -27,7 +22,7 @@ export default function NavIcons() {
     };
 
     const handleCart = () => {
-        if (!isLoggedIn) {
+        if (!isAuthenticated) {
             router.push('/login');
             return;
         }
@@ -36,26 +31,9 @@ export default function NavIcons() {
 
     const handleLogout = async () => {
         try {
-            const token = localStorage.getItem('refresh_token');
-            const response = await fetch('http://localhost:8000/api/logout/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                },
-                body: JSON.stringify({ refresh_token: token }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Logout failed');
-            }
-
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
+            await logout();
             setIsProfileOpen(false);
-            setIsLoggedIn(false);
             router.push('/login');
-            
         } catch (error) {
             console.error('Logout error:', error);
         }
@@ -63,7 +41,7 @@ export default function NavIcons() {
 
     return (
         <div className='flex items-center gap-4 xl:gap-6 relative'>
-            {isLoggedIn && (
+            {isAuthenticated && (
                 <>
                     {/* PROFILE */}
                     <Image 
@@ -117,13 +95,13 @@ export default function NavIcons() {
                     height={22} 
                     className='cursor-pointer'
                 />
-                {isLoggedIn && (
+                {isAuthenticated && (
                     <div className='absolute -top-4 -right-4 w-6 h-6 bg-myColor text-sm rounded-full text-white flex items-center justify-center'>
                         2
                     </div>
                 )}
             </div>
-            {isCartOpen && isLoggedIn && <CartModel/>}     
+            {isCartOpen && isAuthenticated && <CartModel/>}     
         </div>
     );
 }
