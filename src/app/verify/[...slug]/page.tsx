@@ -1,19 +1,26 @@
-// src/app/verify/[...slug]/page.tsx
-import { VerificationDialog } from "@/components/auth/verification/verify-dialog";
+// src/app/verify/[...token]/page.tsx
+import { CardWrapper } from "@/components/auth/card-wrapper";
+import { VerifyEmail } from "@/components/auth/verification/verify-email";
 
 interface PageProps {
   params: {
-    slug: string[];
+    token: string[];
   };
 }
 
 export default function VerificationPage({ params }: PageProps) {
-  // Join all segments to reconstruct the token
-  const token = params.slug.join('/');
+  const { token } = params;
+  
+  // Join token segments directly without storing in storage
+  const verificationToken = token.join('/');
 
   return (
     <div className="min-h-screen">
-      <VerificationDialog verificationToken={token} />
+      <CardWrapper headerLabel="Email Verification">
+        <div className="p-4 mobileM:p-2">
+          <VerifyEmail token={verificationToken} />
+        </div>
+      </CardWrapper>
     </div>
   );
 }

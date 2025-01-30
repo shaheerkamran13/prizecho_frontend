@@ -37,30 +37,16 @@ export async function fetchAPI(
     ...(fetchOptions.headers as Record<string, string> || {})
   };
 
-  if (token && typeof window !== 'undefined') {
-    const userData = localStorage.getItem('user_data');
-    if (userData) {
-      try {
-        const { access_token } = JSON.parse(userData);
-        headers['Authorization'] = `Bearer ${access_token}`;
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-      }
-    }
-  }
-
   try {
     // Ensure we have a clean endpoint that starts with /api/
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const apiEndpoint = cleanEndpoint.startsWith('/api/') ? cleanEndpoint : `/api${cleanEndpoint}`;
     const url = `${API_BASE_URL}${apiEndpoint}`.replace(/([^:]\/)\/+/g, '$1');
-    
-    console.log('Fetching from:', url); // Debug log
 
     const response = await fetch(url, {
       ...fetchOptions,
       headers,
-      credentials: 'include',
+      credentials: 'include', // Enable cookie handling
       cache: 'no-store',
     });
 

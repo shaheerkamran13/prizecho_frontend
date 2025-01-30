@@ -11,7 +11,9 @@ interface FilterParams {
 
 export const ProductService = {
   getFeaturedProducts: async () => {
-    return fetchAPI('/featured-items/');
+    return fetchAPI('/featured-items/', {
+      credentials: 'include'
+    });
   },
 
   getProducts: async (params: FilterParams = {}) => {
@@ -22,20 +24,28 @@ export const ProductService = {
     );
 
     const queryString = queryParams.toString();
-    return fetchAPI(`/items/${queryString ? `?${queryString}` : ''}`);
+    return fetchAPI(`/items/${queryString ? `?${queryString}` : ''}`, {
+      credentials: 'include'
+    });
   },
 
   getProduct: async (slug: string) => {
-    return fetchAPI(`/items/${slug}/`);
+    return fetchAPI(`/items/${slug}/`, {
+      credentials: 'include'
+    });
   },
 
   getCategories: async () => {
-    return fetchAPI('/categories/');
+    return fetchAPI('/categories/', {
+      credentials: 'include'
+    });
   },
 
   getSearchSuggestions: async (term: string) => {
     if (term.length < 2) return { suggestions: [] };
-    return fetchAPI(`/search-suggestions/?term=${encodeURIComponent(term)}`);
+    return fetchAPI(`/search-suggestions/?term=${encodeURIComponent(term)}`, {
+      credentials: 'include'
+    });
   },
 
   searchProducts: async (query: string, filters: FilterParams = {}) => {
@@ -52,6 +62,8 @@ export const ProductService = {
         .map(([key, value]) => [key, value.toString()])
     );
 
-    return fetchAPI(`/search/?${queryParams.toString()}`);
+    return fetchAPI(`/search/?${queryParams.toString()}`, {
+      credentials: 'include'
+    });
   }
 };

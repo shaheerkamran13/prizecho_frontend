@@ -22,7 +22,6 @@ export function VerifyEmail({ token }: { token: string }) {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const router = useRouter();
 
-  // Handle countdown timer
   useEffect(() => {
     if (verificationState.disableEndTime) {
       const updateTimer = () => {
@@ -37,7 +36,6 @@ export function VerifyEmail({ token }: { token: string }) {
         }
       };
 
-      // Update immediately and then every minute
       updateTimer();
       const interval = setInterval(updateTimer, 60000);
       return () => clearInterval(interval);
@@ -65,14 +63,16 @@ export function VerifyEmail({ token }: { token: string }) {
           });
           toast.success("Email verified successfully!");
           
+          // Store verification state in session
+          sessionStorage.setItem('emailVerificationStatus', 'success');
+          
           setTimeout(() => {
             router.push('/login');
           }, 3000);
         } else {
-          // Handle rate limiting
           if (result.error === "EMAIL_VERIFICATION_THROTTLED" || 
               result.error === "RATE_LIMIT_EXCEEDED") {
-            const waitMinutes = 60; // Default to 60 minutes if not specified
+            const waitMinutes = 60;
             setVerificationState({
               status: 'error',
               email: result.email,
@@ -80,17 +80,13 @@ export function VerifyEmail({ token }: { token: string }) {
               disableEndTime: Date.now() + (waitMinutes * 60 * 1000),
               message: "Too many attempts. Please try again later."
             });
-          }
-          // Handle invalid/expired link
-          else if (result.error === "USER_INVALID_VERIFICATION_LINK") {
+          } else if (result.error === "USER_INVALID_VERIFICATION_LINK") {
             setVerificationState({
               status: 'error',
               message: "This verification link has expired. Please request a new one.",
               email: result.email
             });
-          }
-          // Handle other errors
-          else {
+          } else {
             setVerificationState({
               status: 'error',
               message: result.message || "Unable to verify email. Please try again.",
@@ -110,6 +106,7 @@ export function VerifyEmail({ token }: { token: string }) {
     verifyEmailToken();
   }, [token, router, verifyEmail]);
 
+  // Loading State
   if (verificationState.status === 'loading') {
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
@@ -120,6 +117,7 @@ export function VerifyEmail({ token }: { token: string }) {
     );
   }
 
+  // Success State
   if (verificationState.status === 'success') {
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4 text-center">

@@ -6,6 +6,9 @@ import { ProductService } from '@/lib/api/services/product.service'
 import Filter from '@/components/Filter'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useAuth } from '@/lib/context/UserAuthContext'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface Product {
   id: number;
@@ -37,6 +40,8 @@ export default function ListPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [activeFilters, setActiveFilters] = useState<FilterParams>({})
+  const { isAuthenticated } = useAuth()
+  const router = useRouter()
 
   const fetchProducts = async (filters: FilterParams = {}) => {
     setLoading(true);
@@ -74,6 +79,16 @@ export default function ListPage() {
   const handleFilterChange = async (filters: FilterParams) => {
     setActiveFilters(filters);
     fetchProducts(filters);
+  }
+
+  const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      toast.error("Please login to add items to cart");
+      router.push('/login');
+      return;
+    }
+    // Add to cart logic here
+    toast.success("Item added to cart");
   }
 
   return (
@@ -125,7 +140,13 @@ export default function ListPage() {
                 </div>
               </div>
               
-              <button className="rounded-2xl text-myColor ring-1 ring-myColor py-2 px-4 text-xs hover:bg-myColor hover:text-white w-max">
+              <button 
+                onClick={(e) => {
+                  e.preventDefault(); // Prevent Link navigation
+                  handleAddToCart();
+                }}
+                className="rounded-2xl text-myColor ring-1 ring-myColor py-2 px-4 text-xs hover:bg-myColor hover:text-white w-max"
+              >
                 Add to Cart
               </button>
             </Link>

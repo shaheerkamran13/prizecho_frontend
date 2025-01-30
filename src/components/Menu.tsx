@@ -1,8 +1,11 @@
+// src/components/Menu.tsx
 'use client'
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { fetchAPI } from '@/lib/api/config'
+import { useAuth } from '@/lib/context/UserAuthContext'
+import { useRouter } from 'next/navigation'
 
 interface Category {
   id: number;
@@ -14,11 +17,15 @@ export default function Menu() {
     const [open, setOpen] = useState(false);
     const [categories, setCategories] = useState<Category[]>([]);
     const [showCategories, setShowCategories] = useState(false);
+    const { isAuthenticated, logout } = useAuth();
+    const router = useRouter();
 
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const data = await fetchAPI('/categories/');
+                const data = await fetchAPI('/categories/', {
+                    credentials: 'include'
+                });
                 setCategories(data);
             } catch (error) {
                 console.error('Failed to fetch categories:', error);
@@ -29,6 +36,17 @@ export default function Menu() {
             fetchCategories();
         }
     }, [open]);
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+            setOpen(false);
+            router.push('/login');
+            router.refresh(); // Add refresh for UI update
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
 
     return (
         <div className=''>
@@ -67,10 +85,29 @@ export default function Menu() {
                             </div>
                         )}
                     </div>
-                    <Link href={'/'}>Shop</Link>
-                    <Link href={'/'}>Deals</Link>
-                    <Link href={'/'}>Logout</Link>
-                    <Link href={'/'}>Cart(1)</Link>
+                    <Link href={'/'} onClick={() => setOpen(false)}>Shop</Link>
+                    <Link href={'/'} onClick={() => setOpen(false)}>Deals</Link>
+                    {isAuthenticated ? (
+                        <button 
+                            onClick={handleLogout}
+                            className="text-white text-xl"
+                        >
+                            Logout
+                        </button>
+                    ) : (
+                        <Link 
+                            href={'/login'} 
+                            onClick={() => setOpen(false)}
+                        >
+                            Login
+                        </Link>
+                    )}
+                    <Link 
+                        href={isAuthenticated ? '/cart' : '/login'} 
+                        onClick={() => setOpen(false)}
+                    >
+                        Cart(1)
+                    </Link>
                 </div>
             )}
         </div>

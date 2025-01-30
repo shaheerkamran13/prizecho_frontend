@@ -52,17 +52,8 @@ const ProfilePage = () => {
 
   const fetchUserData = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      
-      if (!token) {
-        logout();
-        router.push('/login');
-        return;
-      }
-
       const response = await fetch(`${API_BASE_URL}/api/user/`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         credentials: 'include',
@@ -104,17 +95,9 @@ const ProfilePage = () => {
     if (!userData) return;
 
     try {
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        logout();
-        router.push('/login');
-        return;
-      }
-
       const response = await fetch(`${API_BASE_URL}/api/update-profile/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         credentials: 'include',
@@ -151,17 +134,10 @@ const ProfilePage = () => {
 
     try {
       setIsDeleting(true);
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        logout();
-        router.push('/login');
-        return;
-      }
 
       const response = await fetch(`${API_BASE_URL}/api/delete-account/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         credentials: 'include',
@@ -178,7 +154,7 @@ const ProfilePage = () => {
         throw new Error(errorData.message || 'Failed to delete account');
       }
 
-      logout();
+      await logout();
       router.push('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete account');

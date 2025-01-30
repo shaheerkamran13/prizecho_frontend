@@ -1,57 +1,87 @@
 // src/lib/api/services/AuthenticationService.ts
 import { z } from 'zod';
 import { LoginSchema } from '@/lib/schemas/userschema';
-import { formDataRequest, handleAPIResponse } from '../config';
-import { cookies } from 'next/headers';
+import { fetchAPI } from '../config';
 
 export type LoginResponse = {
- access_token: string;
- refresh_token: string;
- expires_in: number;
- token_type: string;
- email?: string;
- user?: any;
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
+  email?: string;
+  user?: any;
 };
 
 export interface AuthResponse {
- success?: string; 
- error?: string;
- message?: string;
- data?: any;
+  success?: string; 
+  error?: string;
+  message?: string;
+  data?: any;
 }
 
-export class AuthenticationService {
- static async login(credentials: z.infer<typeof LoginSchema>): Promise<AuthResponse> {
-   const response = await handleAPIResponse<LoginResponse>(
-     formDataRequest('/user/login', {
-       username: credentials.username,
-       password: credentials.password,
-     })
-   );
+class AuthenticationService {
+  async login(credentials: z.infer<typeof LoginSchema>) {
+    return fetchAPI('/api/token/', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+      credentials: 'include'
+    });
+  }
 
-   if (response.data) {
-     const expiresInMilliseconds = response.data.expires_in * 1000;
-     const userData = {
-       ...response.data,
-       accessTokenExpires: Date.now() + expiresInMilliseconds,
-     };
+  async logout() {
+    return fetchAPI('/api/logout/', {
+      method: 'POST',
+      credentials: 'include'
+    });
+  }
 
-     cookies().set({
-       name: 'user_data',
-       value: JSON.stringify(userData),
-       httpOnly: true,
-       secure: process.env.NODE_ENV === 'production',
-       sameSite: 'lax',
-       path: '/',
-     });
+  async refreshToken() {
+    return fetchAPI('/api/token/refresh/', {
+      method: 'POST',
+      credentials: 'include'
+    });
+  }
 
-     return { 
-       success: 'Authenticated!',
-       message: 'Welcome!',
-       data: response.data
-     };
-   }
+  async resetPassword(email: string) {
+    return fetchAPI('/api/password-reset/', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+      credentials: 'include'
+    });
+  }
 
-   return { error: response.error || 'Login failed' };
- }
+  async confirmPasswordReset(token: string, password: string) {
+    return fetchAPI('/api/password-reset-confirm/', {
+      method: 'POST',
+      body: JSON.stringify({
+        token,
+        password
+      }),
+      credentials: 'include'
+    });
+  }
+
+  async verifyEmail(token: string) {
+    return fetchAPI(`/api/verify-email/${token}/`, {
+      method: 'GET',
+      credentials: 'include'
+    });
+  }
+
+  async resendVerificationEmail(email: string) {
+    return fetchAPI('/api/send-verification/', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+      credentials: 'include'
+    });
+  }
+
+  async getUserProfile() {
+    return fetchAPI('/api/user/', {
+      method: 'GET',
+      credentials: 'include'
+    });
+  }
 }
+
+export default new AuthenticationService();

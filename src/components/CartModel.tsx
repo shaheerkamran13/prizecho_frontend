@@ -25,7 +25,7 @@ export default function CartModel() {
     {
       id: 1,
       name: "Product Name 1",
-      price: 4900, // in cents
+      price: 4900,
       quantity: 2,
       image:
         "https://images.pexels.com/photos/29594648/pexels-photo-29594648/free-photo-of-elegant-portrait-of-man-in-outdoor-setting.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
@@ -34,7 +34,7 @@ export default function CartModel() {
     {
       id: 2,
       name: "Product Name 2",
-      price: 7900, // in cents
+      price: 7900,
       quantity: 1,
       image:
         "https://images.pexels.com/photos/29594648/pexels-photo-29594648/free-photo-of-elegant-portrait-of-man-in-outdoor-setting.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
@@ -51,9 +51,8 @@ export default function CartModel() {
 
   const calculateSubtotal = () => {
     return (
-      cartItems.reduce((total, item) => total + item.price * item.quantity, 0) /
-      100
-    ); // Convert cents to dollars
+      cartItems.reduce((total, item) => total + item.price * item.quantity, 0) / 100
+    );
   };
 
   const handleCheckout = async () => {
@@ -71,6 +70,7 @@ export default function CartModel() {
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: 'include', // Add cookie support
         body: JSON.stringify({ items: cartItems }),
       });
 
@@ -98,7 +98,6 @@ export default function CartModel() {
         <>
           <h2 className="text-xl">Shopping Cart</h2>
 
-          {/* LIST */}
           <div className="flex flex-col gap-8">
             {cartItems.map((item) => (
               <div key={item.id} className="flex gap-4">
@@ -134,7 +133,6 @@ export default function CartModel() {
             ))}
           </div>
 
-          {/* BOTTOM */}
           <div>
             <div className="flex items-center justify-between font-semibold">
               <span>Subtotal</span>

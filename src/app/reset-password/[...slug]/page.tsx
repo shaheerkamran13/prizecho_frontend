@@ -1,3 +1,4 @@
+// src/app/reset-password/[...slug]/page.tsx
 "use client";
 
 import { CardWrapper } from "@/components/auth/card-wrapper";
@@ -29,6 +30,9 @@ export default function ResetPasswordPage({ params }: ResetPasswordPageProps) {
   // Construct the token string
   const [uidb64, token] = slug;
   const resetToken = `${uidb64}/${token}`;
+
+  // Store token temporarily in sessionStorage instead of localStorage
+  sessionStorage.setItem('resetToken', resetToken);
 
   return (
     <div className="flex min-h-full flex-col items-center justify-center py-12 sm:px-6 lg:px-8">

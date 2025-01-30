@@ -1,7 +1,8 @@
+// src/components/NavIcons.tsx
 'use client'
 import React from 'react'
 import Image from 'next/image'
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import CartModel from './CartModel';
@@ -10,7 +11,7 @@ import { useAuth } from '@/lib/context/UserAuthContext';
 export default function NavIcons() {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isCartOpen, setIsCartOpen] = useState(false);
-    const { logout, isAuthenticated } = useAuth(); // Get isAuthenticated from auth context
+    const { logout, isAuthenticated } = useAuth();
     const router = useRouter();
 
     const handleProfile = () => {
@@ -34,6 +35,7 @@ export default function NavIcons() {
             await logout();
             setIsProfileOpen(false);
             router.push('/login');
+            router.refresh(); // Add refresh to update UI after logout
         } catch (error) {
             console.error('Logout error:', error);
         }
@@ -43,7 +45,6 @@ export default function NavIcons() {
         <div className='flex items-center gap-4 xl:gap-6 relative'>
             {isAuthenticated && (
                 <>
-                    {/* PROFILE */}
                     <Image 
                         src={'/profile.png'} 
                         alt='profile' 
@@ -71,7 +72,6 @@ export default function NavIcons() {
                         </div>
                     )}
                     
-                    {/* NOTIFICATION */}
                     <Image 
                         src={'/notification.png'} 
                         alt='notification' 
@@ -83,7 +83,6 @@ export default function NavIcons() {
                 </>
             )}
 
-            {/* CART */}
             <div 
                 className='relative cursor-pointer'
                 onClick={handleCart}

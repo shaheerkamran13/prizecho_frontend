@@ -1,8 +1,9 @@
+// src/components/auth/reset-password/reset-password-dialog.tsx
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { IoClose } from "react-icons/io5";
 import ResetPassword from "./reset-password";
 import { useAuth } from "@/lib/context/UserAuthContext";
@@ -12,15 +13,17 @@ export default function ResetPasswordDialog() {
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === "updatePassword" && event.newValue === "true") {
-        router.push("/login");
-        localStorage.removeItem("updatePassword");
+    const handlePasswordReset = (event: CustomEvent) => {
+      if (event.detail.success) {
+        router.push('/login');
       }
     };
 
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    // Use custom event instead of storage
+    window.addEventListener('passwordReset' as any, handlePasswordReset);
+    return () => {
+      window.removeEventListener('passwordReset' as any, handlePasswordReset);
+    };
   }, [router]);
 
   // Redirect if already authenticated

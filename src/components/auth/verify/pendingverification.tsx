@@ -23,11 +23,10 @@ export function PendingVerification() {
       const result = await resendVerification(email);
 
       if (result.error) {
-        // Handle rate limiting
         if (result.error === 'EMAIL_VERIFICATION_THROTTLED' || 
             result.error === 'RATE_LIMIT_EXCEEDED') {
           setIsResendDisabled(true);
-          const waitMinutes = 60; // Default to 60 minutes
+          const waitMinutes = 60;
           toast.error(`Too many attempts. Please wait ${waitMinutes} minutes before trying again.`);
           
           // Re-enable after wait time
@@ -42,7 +41,6 @@ export function PendingVerification() {
         return;
       }
 
-      // Success case
       toast.success("A new verification email has been sent!");
 
     } catch (error) {
@@ -57,10 +55,8 @@ export function PendingVerification() {
       return;
     }
 
-    // Initial verification email send
     handleResendVerification();
 
-    // Check verification status
     const checkVerification = async () => {
       try {
         const response = await fetch(
@@ -70,6 +66,7 @@ export function PendingVerification() {
             headers: {
               "Content-Type": "application/json",
             },
+            credentials: 'include'
           }
         );
 

@@ -1,32 +1,32 @@
 "use client";
-import { resendVerification } from "@/app/actions/resend-verification";
+import { useAuth } from "@/lib/context/UserAuthContext";
 import { ResendLinkSchema } from "@/lib/schemas/userschema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import "react-phone-input-2/lib/style.css";
 import { toast } from "sonner";
 import * as z from "zod";
 import { Button } from "../ui/button";
-
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,} from "../ui/form";
-
+  FormMessage,
+} from "../ui/form";
 import { FormError } from "../ui/form-error";
 import { FormSuccess } from "../ui/form-success";
 import { Input } from "../ui/input";
 
-function ResetPassword() {
+function ResendLink() {
+  const { resendVerification } = useAuth();
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined | boolean>("");
+  const [isPending, setIsPending] = useState(false);
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();z
 
   const form = useForm<z.infer<typeof ResendLinkSchema>>({
     resolver: zodResolver(ResendLinkSchema),
@@ -35,42 +35,43 @@ function ResetPassword() {
     },
   });
 
-  const onsubmit = (values: z.infer<typeof ResendLinkSchema>) => {
-    setError("");
-    setSuccess("");
+  const onSubmit = async (values: z.infer<typeof ResendLinkSchema>) => {
+    try {
+      setError("");
+      setSuccess("");
+      setIsPending(true);
 
-    startTransition(() => {
-      resendVerification(values).then((data: any) => {
-        setError(data?.error);
-        setSuccess(data?.success);
+      const result = await resendVerification(values.email);
 
-        // Ensure isPending is set to false after the response
-        if (data?.error) {
-          toast.error("An error occurred. Please try again.");
-        } else if (data?.success) {
-          toast.success("A verification link has been sent to your email.");
+      if (result.error) {
+        setError(result.error);
+        toast.error("An error occurred. Please try again.");
+      } else if (result.success) {
+        setSuccess(result.success);
+        toast.success("A verification link has been sent to your email.");
 
-          if (data.success === "Your account is already verified.") {
-            router.replace("/login");
-          } else if (
-            data.success ===
-            "A verification email has been sent to your email address."
-          ) {
-            router.replace("/verify");
-          } else {
-            router.back();
-          }
+        if (result.success === "Your account is already verified.") {
+          router.replace("/login");
+        } else if (
+          result.success ===
+          "A verification email has been sent to your email address."
+        ) {
+          router.replace("/verify");
+        } else {
+          router.back();
         }
-
-        // After response, make sure isPending is false
-        startTransition(() => {}); // Clear pending state manually.
-      });
-    });
+      }
+    } catch (error) {
+      setError("An unexpected error occurred");
+      toast.error("Failed to send verification email");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onsubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="email"
@@ -116,4 +117,4 @@ function ResetPassword() {
   );
 }
 
-export default ResetPassword;
+export default ResendLink;

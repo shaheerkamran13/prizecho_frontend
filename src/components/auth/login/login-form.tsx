@@ -51,7 +51,6 @@ export const LoginForm = () => {
 
       const result = await login(values);
 
-      // Handle unverified email case
       if (result.error === "unverified_email" && result.data?.email) {
         setError("Unverified email. A new verification email has been sent.");
         router.push(`/verify/pending?email=${result.data.email}`);
@@ -70,12 +69,14 @@ export const LoginForm = () => {
         setSuccess(result.success);
         toast.success("Welcome back! You're now logged in.");
 
-        const previousPath = localStorage.getItem("previousPath");
-        if (previousPath) {
-          router.back();
-          localStorage.removeItem("previousPath");
+        // Use sessionStorage for temporary path storage
+        const redirectPath = sessionStorage.getItem("redirectPath");
+        if (redirectPath) {
+          sessionStorage.removeItem("redirectPath");
+          router.push(redirectPath);
         } else {
-          window.location.href = "/";
+          router.push("/");
+          router.refresh();
         }
       }
     } catch (error) {

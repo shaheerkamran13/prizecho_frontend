@@ -57,12 +57,11 @@ export default function UpdatePassword({ token }: UpdatePasswordProps) {
         setSuccess(result.message);
         toast.success(result.message);
         
-        // Set flag for dialog close
-        localStorage.setItem("updatePassword", "true");
-        window.dispatchEvent(new StorageEvent("storage", {
-          key: "updatePassword",
-          newValue: "true"
-        }));
+        // Use custom event instead of localStorage
+        const passwordUpdatedEvent = new CustomEvent('passwordUpdated', {
+          detail: { success: true }
+        });
+        window.dispatchEvent(passwordUpdatedEvent);
         
         // Wait for 2 seconds before redirecting
         setTimeout(() => {
