@@ -1,0 +1,120 @@
+"use client";
+import { useAuth } from "@/lib/context/UserAuthContext";
+import { ResendLinkSchema } from "@/lib/schemas/userschema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import "react-phone-input-2/lib/style.css";
+import { toast } from "sonner";
+import * as z from "zod";
+import { Button } from "../ui/button";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
+import { FormError } from "../ui/form-error";
+import { FormSuccess } from "../ui/form-success";
+import { Input } from "../ui/input";
+
+function ResendLink() {
+  const { resendVerification } = useAuth();
+  const [error, setError] = useState<string | undefined>("");
+  const [success, setSuccess] = useState<string | undefined | boolean>("");
+  const [isPending, setIsPending] = useState(false);
+  const router = useRouter();
+
+  const form = useForm<z.infer<typeof ResendLinkSchema>>({
+    resolver: zodResolver(ResendLinkSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const onSubmit = async (values: z.infer<typeof ResendLinkSchema>) => {
+    try {
+      setError("");
+      setSuccess("");
+      setIsPending(true);
+
+      const result = await resendVerification(values.email);
+
+      if (result.error) {
+        setError(result.error);
+        toast.error("An error occurred. Please try again.");
+      } else if (result.success) {
+        setSuccess(result.success);
+        toast.success("A verification link has been sent to your email.");
+
+        if (result.success === "Your account is already verified.") {
+          router.replace("/login");
+        } else if (
+          result.success ===
+          "A verification email has been sent to your email address."
+        ) {
+          router.replace("/verify");
+        } else {
+          router.back();
+        }
+      }
+    } catch (error) {
+      setError("An unexpected error occurred");
+      toast.error("Failed to send verification email");
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return (
+    <FormProvider {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  disabled={isPending || !!success}
+                  placeholder="example@gmail.com"
+                  type="email"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {!success && (
+          <Button
+            disabled={isPending || !!success}
+            type="submit"
+            className="w-full rounded-md bg-accent py-2 text-center font-medium text-white hover:bg-[#18c781]"
+          >
+            {isPending ? (
+              <>
+                <AiOutlineLoading3Quarters className="mr-2 h-4 w-4 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              "Re-send Email"
+            )}
+          </Button>
+        )}
+
+        <FormSuccess
+          message={typeof success === "boolean" ? success.toString() : success}
+        />
+        <FormError message={error} />
+      </form>
+    </FormProvider>
+  );
+}
+
+export default ResendLink;
