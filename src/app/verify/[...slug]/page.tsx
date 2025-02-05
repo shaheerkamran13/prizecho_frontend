@@ -1,26 +1,36 @@
-// src/app/verify/[...token]/page.tsx
+// src/app/verify/[...slug]/page.tsx
 import { CardWrapper } from "@/components/auth/card-wrapper";
 import { VerifyEmail } from "@/components/auth/verification/verify-email";
+import { notFound } from "next/navigation";
 
 interface PageProps {
   params: {
-    token: string[];
+    slug?: string[];
   };
 }
 
 export default function VerificationPage({ params }: PageProps) {
-  const { token } = params;
-  
-  // Join token segments directly without storing in storage
-  const verificationToken = token.join('/');
+  // Check if slug exists and has segments
+  if (!params?.slug || params.slug.length === 0) {
+    notFound();
+  }
+
+  // Safely join slug segments
+  const verificationToken = params.slug.join('/');
+
+  if (!verificationToken) {
+    notFound();
+  }
 
   return (
-    <div className="min-h-screen">
-      <CardWrapper headerLabel="Email Verification">
-        <div className="p-4 mobileM:p-2">
-          <VerifyEmail token={verificationToken} />
-        </div>
-      </CardWrapper>
+    <div className="flex min-h-screen flex-col items-center justify-center">
+      <div className="mb-20 mt-10">
+        <CardWrapper headerLabel="Email Verification">
+          <div className="p-4 mobileM:p-2">
+            <VerifyEmail token={verificationToken} />
+          </div>
+        </CardWrapper>
+      </div>
     </div>
   );
 }
