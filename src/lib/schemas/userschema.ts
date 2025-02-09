@@ -64,6 +64,9 @@ export const ResendLinkSchema = z.object({
 
 export const UpdatePasswordSchema = z
   .object({
+    uidb64: z.string().min(1, {
+      message: "UID is required",
+    }),
     token: z.string().min(1, {
       message: "Token is required",
     }),

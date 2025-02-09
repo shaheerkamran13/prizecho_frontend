@@ -19,6 +19,13 @@ export interface AuthResponse {
   data?: any;
 }
 
+interface PasswordResetConfirmParams {
+  uidb64: string;
+  token: string;
+  new_password: string;
+  confirm_password: string;
+}
+
 class AuthenticationService {
   async login(credentials: z.infer<typeof LoginSchema>) {
     return fetchAPI('/api/token/', {
@@ -50,12 +57,15 @@ class AuthenticationService {
     });
   }
 
-  async confirmPasswordReset(token: string, password: string) {
+  async confirmPasswordReset(params: PasswordResetConfirmParams) {
+    console.log('Sending password reset params:', params); // Debug log
+
     return fetchAPI('/api/password-reset-confirm/', {
       method: 'POST',
       body: JSON.stringify({
-        token,
-        password
+        uidb64: params.uidb64,
+        token: params.token,
+        new_password: params.new_password
       }),
       credentials: 'include'
     });

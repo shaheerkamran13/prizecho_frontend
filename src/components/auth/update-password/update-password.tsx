@@ -23,10 +23,11 @@ import { FormSuccess } from "../ui/form-success";
 import { Input } from "../ui/input";
 
 interface UpdatePasswordProps {
+  uidb64: string;
   token: string;
 }
 
-export default function UpdatePassword({ token }: UpdatePasswordProps) {
+export default function UpdatePassword({ uidb64, token }: UpdatePasswordProps) {
   const { confirmPasswordReset } = useAuth();
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
@@ -36,7 +37,8 @@ export default function UpdatePassword({ token }: UpdatePasswordProps) {
   const form = useForm<z.infer<typeof UpdatePasswordSchema>>({
     resolver: zodResolver(UpdatePasswordSchema),
     defaultValues: {
-      token: token,
+      uidb64,
+      token,
       new_password: "",
       confirm_password: "",
     },
@@ -48,7 +50,12 @@ export default function UpdatePassword({ token }: UpdatePasswordProps) {
       setSuccess("");
       setIsPending(true);
 
-      const result = await confirmPasswordReset(values);
+      const result = await confirmPasswordReset({
+        uidb64,
+        token,
+        new_password: values.new_password,
+        confirm_password: values.confirm_password
+      });
       
       if (result.error) {
         setError(result.error);
@@ -57,20 +64,13 @@ export default function UpdatePassword({ token }: UpdatePasswordProps) {
         setSuccess(result.message);
         toast.success(result.message);
         
-        // Use custom event instead of localStorage
-        const passwordUpdatedEvent = new CustomEvent('passwordUpdated', {
-          detail: { success: true }
-        });
-        window.dispatchEvent(passwordUpdatedEvent);
-        
-        // Wait for 2 seconds before redirecting
         setTimeout(() => {
           router.push("/login");
         }, 2000);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Update password error:", error);
-      setError("Something went wrong. Please try again.");
+      setError(error.message || "Something went wrong. Please try again.");
       toast.error("Failed to update password");
     } finally {
       setIsPending(false);

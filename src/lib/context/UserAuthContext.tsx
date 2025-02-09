@@ -213,10 +213,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const confirmPasswordReset = useCallback(async (values: z.infer<typeof UpdatePasswordSchema>) => {
         try {
-            const response = await AuthenticationService.confirmPasswordReset(
-                values.token,
-                values.new_password
-            );
+            const response = await AuthenticationService.confirmPasswordReset({
+                uidb64: values.uidb64,
+                token: values.token,
+                new_password: values.new_password,
+                confirm_password: values.confirm_password
+            });
             return {
                 success: true,
                 message: "Password updated successfully"
