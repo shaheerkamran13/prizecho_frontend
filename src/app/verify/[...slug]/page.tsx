@@ -33,4 +33,4 @@ export default function VerificationPage({ params }: PageProps) {
       </div>
     </div>
   );
-}
+}  
