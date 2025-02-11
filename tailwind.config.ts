@@ -18,24 +18,27 @@ const config: Config = {
         myColor: "#F35C7A",
       },
 
-
       keyframes: {
         'fade-in': {
           '0%': { opacity: '0', transform: 'translateY(20px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' }
-        }
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'popup': {
+          '0%': { opacity: '0', transform: 'translateY(-10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       animation: {
-        'fade-in': 'fade-in 0.5s ease-out'
-      }
-
-
+        'fade-in': 'fade-in 0.5s ease-out',
+        'popup': 'popup 0.2s ease-out forwards',
+      },
+      transitionDelay: {
+        '200': '200ms', // Add a delay utility
+        '300': '300ms', // Add a delay utility
+      },
     },
-      
   },
-
-  
-
   plugins: [],
 };
+
 export default config;
