@@ -71,7 +71,7 @@ const SuccessfulPaymentPage = () => {
                   <CreditCard className="w-5 h-5 text-gray-500" />
                   <span className="font-medium">Total Amount:</span>
                 </div>
-                <p className="text-gray-700 mt-1">₹{orderDetails.totalAmount.toFixed(2)}</p>
+                <p className="text-gray-700 mt-1">PKR {orderDetails.totalAmount.toFixed(2)}</p>
               </div>
             </div>
 
@@ -86,7 +86,7 @@ const SuccessfulPaymentPage = () => {
                       <span>{item.name}</span>
                     </div>
                     <span className="text-gray-700">
-                      {item.quantity} x ₹{item.price.toFixed(2)}
+                      {item.quantity} x PKR {item.price.toFixed(2)}
                     </span>
                   </li>
                 ))}

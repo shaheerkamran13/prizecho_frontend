@@ -91,7 +91,7 @@ export default function CartModel() {
                   <div className="flex items-center justify-between gap-8">
                     <h3 className="font-semibold">{item.name}</h3>
                     <div className="p-1 bg-gray-50 rounded-sm">
-                      ${(item.price / 100).toFixed(2)}
+                      PKR {(item.price / 100).toFixed(2)}
                     </div>
                   </div>
                   <div className="text-sm text-gray-500">
@@ -115,7 +115,7 @@ export default function CartModel() {
           <div>
             <div className="flex items-center justify-between font-semibold">
               <span>Subtotal</span>
-              <span>${calculateSubtotal().toFixed(2)}</span>
+              <span>PKR {calculateSubtotal().toFixed(2)}</span>
             </div>
             <p className="text-gray-500 text-sm mt-2 mb-4">
               Shipping and taxes calculated at checkout

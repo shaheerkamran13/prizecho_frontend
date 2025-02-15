@@ -27,10 +27,18 @@ const config: Config = {
           '0%': { opacity: '0', transform: 'translateY(-10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+
+        popup2: {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+
+        
       },
       animation: {
         'fade-in': 'fade-in 0.5s ease-out',
         'popup': 'popup 0.2s ease-out forwards',
+        'popup2': 'popup 0.3s ease-out',
       },
       transitionDelay: {
         '200': '200ms', // Add a delay utility

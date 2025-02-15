@@ -3,9 +3,9 @@ import React from 'react'
 
 
 const recentOrders = [
-    { id: "#12345", date: "Dec 15, 2024", status: "Delivered", amount: "$156.00" },
-    { id: "#12344", date: "Dec 10, 2024", status: "In Transit", amount: "$89.99" },
-    { id: "#12343", date: "Dec 05, 2024", status: "Processing", amount: "$234.50" }
+    { id: "#12345", date: "Dec 15, 2024", status: "Delivered", amount: "PKR 156" },
+    { id: "#12344", date: "Dec 10, 2024", status: "In Transit", amount: "PKR 89" },
+    { id: "#12343", date: "Dec 05, 2024", status: "Processing", amount: "PKR 234" }
   ];
 export default function OrdersSection() {
   return (

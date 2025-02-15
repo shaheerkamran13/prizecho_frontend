@@ -25,7 +25,7 @@ export default function ProductList() {
             </div>
             <div className="flex justify-between">
                 <span className="font-medium">Product Name</span>
-                <span className="font-semibold">$49</span>
+                <span className="font-semibold">PKR 49</span>
             </div>
 
             <div className="text-sm text-gray-500">My Description</div>
@@ -53,7 +53,7 @@ export default function ProductList() {
             </div>
             <div className="flex justify-between">
                 <span className="font-medium">Product Name</span>
-                <span className="font-semibold">$49</span>
+                <span className="font-semibold">PKR 49</span>
             </div>
 
             <div className="text-sm text-gray-500">My Description</div>
@@ -80,7 +80,7 @@ export default function ProductList() {
             </div>
             <div className="flex justify-between">
                 <span className="font-medium">Product Name</span>
-                <span className="font-semibold">$49</span>
+                <span className="font-semibold">PKR 49</span>
             </div>
 
             <div className="text-sm text-gray-500">My Description</div>
@@ -108,7 +108,7 @@ export default function ProductList() {
             </div>
             <div className="flex justify-between">
                 <span className="font-medium">Product Name</span>
-                <span className="font-semibold">$49</span>
+                <span className="font-semibold">PKR49</span>
             </div>
 
             <div className="text-sm text-gray-500">My Description</div>

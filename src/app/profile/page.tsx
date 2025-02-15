@@ -22,6 +22,7 @@ import { ProfileSection } from '@/components/Profile/ProfileSection';
 import { NotificationsSection } from '@/components/Profile/NotificationSection';
 import SecuritySection from '@/components/Profile/SecuritySection';
 import WalletSection from '@/components/Profile/WalletSection';
+import DeleteAccount from '@/components/Profile/DeleteAccount';
 const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState('profile');
 
@@ -36,6 +37,7 @@ const ProfilePage = () => {
     { id: 'payments', icon: <CreditCard size={20} />, label: 'Payment Methods' },
     { id: 'notifications', icon: <Bell size={20} />, label: 'Notifications' },
     { id: 'security', icon: <Lock size={20} />, label: 'Security' },
+    { id: 'deleteAccount', icon: <Lock size={20} />, label: 'Delete Account' },
   ];
 
   const renderContent = () => {
@@ -79,6 +81,11 @@ const ProfilePage = () => {
         return (
           <SecuritySection/>
         );
+
+        case 'deleteAccount':
+          return (
+            <DeleteAccount/>
+          );
 
       default:
         return (

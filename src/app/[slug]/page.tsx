@@ -17,8 +17,8 @@ export default function SinglePage() {
         
         <div className='h-[2px] bg-gray-100'/>
           <div className='flex items-center gap-4'>
-            <h3 className='text-xl line-through text-gray-500'>$59</h3>
-            <h2 className='font-medium text-2xl'>$49</h2>
+            <h3 className='text-xl line-through text-gray-500'>PKR59</h3>
+            <h2 className='font-medium text-2xl'>PKR 49</h2>
           </div>
         <div className='h-[2px] bg-gray-100'/>
         <CustomizeProducts/>

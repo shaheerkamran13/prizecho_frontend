@@ -98,7 +98,7 @@ export default function Footer() {
 
         <div className=''>
           <span className='text-gray-500 mr-4'>Currency</span>
-          <span className='font-medium'>$ USD</span>
+          <span className='font-medium'>PKR</span>
         </div>
       </div>
       

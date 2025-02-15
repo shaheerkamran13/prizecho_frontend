@@ -66,12 +66,7 @@ export default function NavIcons() {
             >
               Orders
             </Link>
-            <Link
-              href={'/wishlist'}
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
-            >
-              Wishlist
-            </Link>
+            
             <div className="mt-2 border-t pt-2">
               <button
                 onClick={() => console.log('Logout')}

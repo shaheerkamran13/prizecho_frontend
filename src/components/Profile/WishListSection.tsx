@@ -17,9 +17,9 @@ interface Toast {
 
 export const WishlistSection: React.FC = () => {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([
-    { id: 1, name: "Wireless Headphones", price: "$129.99", image: "/api/placeholder/80/80" },
-    { id: 2, name: "Smart Watch", price: "$199.99", image: "/api/placeholder/80/80" },
-    { id: 3, name: "Laptop Backpack", price: "$59.99", image: "/api/placeholder/80/80" }
+    { id: 1, name: "Wireless Headphones", price: "PKR 129.99", image: "/api/placeholder/80/80" },
+    { id: 2, name: "Smart Watch", price: "PKR 199.99", image: "/api/placeholder/80/80" },
+    { id: 3, name: "Laptop Backpack", price: "PKR 59.99", image: "/api/placeholder/80/80" }
   ]);
 
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -119,25 +119,6 @@ export const WishlistSection: React.FC = () => {
         ))}
       </div>
 
-      <style jsx global>{`
-        @keyframes slideIn {
-          from {
-            transform: translateX(100%);
-          }
-          to {
-            transform: translateX(0);
-          }
-        }
-        
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 0.9;
-          }
-        }
-      `}</style>
     </div>
   );
 };

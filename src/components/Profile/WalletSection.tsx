@@ -63,7 +63,7 @@ const WalletSection = () => {
                 {/* Wallet Balance */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                   <h4 className="font-semibold mb-4">Wallet Balance</h4>
-                  <p className="text-3xl font-bold text-myColor">₹{balance.toFixed(2)}</p>
+                  <p className="text-3xl font-bold text-myColor">PKR {balance.toFixed(2)}</p>
                 </div>
 
                 {/* Add Funds */}
@@ -107,7 +107,7 @@ const WalletSection = () => {
                             transaction.type === 'credit' ? 'text-green-500' : 'text-red-500'
                           }`}
                         >
-                          {transaction.type === 'credit' ? '+' : '-'}₹{transaction.amount.toFixed(2)}
+                          {transaction.type === 'credit' ? '+' : '-'}PKR {transaction.amount.toFixed(2)}
                         </p>
                       </div>
                     ))}

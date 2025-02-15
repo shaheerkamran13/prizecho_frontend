@@ -103,7 +103,7 @@ const OrderHistoryPage = () => {
                     <CreditCard className="w-5 h-5 text-gray-500" />
                     <div>
                       <p className="text-sm text-gray-500">Total Amount</p>
-                      <p className="font-medium">₹{order.totalAmount.toFixed(2)}</p>
+                      <p className="font-medium">PKR {order.totalAmount.toFixed(2)}</p>
                     </div>
                   </div>
 
