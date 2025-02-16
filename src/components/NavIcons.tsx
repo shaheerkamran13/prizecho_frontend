@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React, { useState } from 'react';
 import Image from 'next/image';
@@ -31,12 +31,12 @@ export default function NavIcons() {
   ];
 
   return (
-    <div className="flex items-center gap-4 xl:gap-6">
+    <div className="flex items-center gap-6 xl:gap-8"> {/* Increased gap for better spacing */}
       {/* PROFILE COMPONENT */}
       <div
         className="relative"
-        onMouseEnter={() => setIsProfileOpen(true)}
-        onMouseLeave={() => setIsProfileOpen(false)}
+        onMouseEnter={() => setIsProfileOpen(true)} // Show dropdown on hover
+        onMouseLeave={() => setIsProfileOpen(false)} // Hide dropdown on mouse leave
       >
         <Image
           src={'/profile.png'}
@@ -45,32 +45,37 @@ export default function NavIcons() {
           height={22}
           className="cursor-pointer"
           onClick={handleProfile}
+          aria-label="Profile"
         />
 
         {/* PROFILE DROPDOWN */}
         {isProfileOpen && (
           <div
-            className="absolute p-4 rounded-md top-8 -left-4 bg-white shadow-lg z-50 min-w-[160px] animate-popup transition-opacity duration-200 delay-200"
+            className="absolute p-4 rounded-md top-8 -left-4 bg-white shadow-lg z-50 min-w-[160px] animate-popup transition-opacity duration-500 delay-500"
             onMouseEnter={() => setIsProfileOpen(true)} // Keep dropdown open when hovering over it
             onMouseLeave={() => setIsProfileOpen(false)} // Close dropdown when cursor leaves
+            role="menu"
+            aria-labelledby="profile-menu"
           >
             <Link
               href={'/profile'}
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+              role="menuitem"
             >
               Profile
             </Link>
             <Link
               href={'/orders'}
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+              role="menuitem"
             >
               Orders
             </Link>
-            
             <div className="mt-2 border-t pt-2">
               <button
                 onClick={() => console.log('Logout')}
                 className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                role="menuitem"
               >
                 Logout
               </button>
@@ -82,8 +87,8 @@ export default function NavIcons() {
       {/* NOTIFICATION COMPONENT */}
       <div
         className="relative"
-        onMouseEnter={() => setIsNotificationOpen(true)}
-        onMouseLeave={() => setIsNotificationOpen(false)}
+        onMouseEnter={() => setIsNotificationOpen(true)} // Show dropdown on hover
+        onMouseLeave={() => setIsNotificationOpen(false)} // Hide dropdown on mouse leave
       >
         <Image
           src={'/notification.png'}
@@ -91,6 +96,7 @@ export default function NavIcons() {
           width={22}
           height={22}
           className="cursor-pointer"
+          aria-label="Notifications"
         />
         <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-xs rounded-full text-white flex items-center justify-center">
           {notifications.length}
@@ -102,6 +108,8 @@ export default function NavIcons() {
             className="absolute p-4 rounded-md top-8 right-0 bg-white shadow-lg z-50 min-w-[300px] animate-popup transition-opacity duration-200 delay-200"
             onMouseEnter={() => setIsNotificationOpen(true)} // Keep dropdown open when hovering over it
             onMouseLeave={() => setIsNotificationOpen(false)} // Close dropdown when cursor leaves
+            role="menu"
+            aria-labelledby="notification-menu"
           >
             <h3 className="text-sm font-semibold mb-4">Notifications</h3>
             <div className="space-y-3">
@@ -109,6 +117,7 @@ export default function NavIcons() {
                 <div
                   key={notification.id}
                   className="text-sm text-gray-700 hover:bg-gray-100 rounded-md p-2 cursor-pointer"
+                  role="menuitem"
                 >
                   <p>{notification.text}</p>
                   <p className="text-xs text-gray-500">{notification.time}</p>
@@ -119,6 +128,7 @@ export default function NavIcons() {
               <Link
                 href={'/notifications'}
                 className="text-sm text-myColor hover:text-pink-600"
+                role="menuitem"
               >
                 View All Notifications
               </Link>
@@ -130,8 +140,8 @@ export default function NavIcons() {
       {/* CART COMPONENT */}
       <div
         className="relative"
-        onMouseEnter={() => setIsCartOpen(true)}
-        onMouseLeave={() => setIsCartOpen(false)}
+        onMouseEnter={() => setIsCartOpen(true)} // Show dropdown on hover
+        onMouseLeave={() => setIsCartOpen(false)} // Hide dropdown on mouse leave
       >
         <div className="cursor-pointer">
           <Image
@@ -140,6 +150,7 @@ export default function NavIcons() {
             width={22}
             height={22}
             className="cursor-pointer"
+            aria-label="Cart"
           />
           <div className="absolute -top-4 -right-4 w-6 h-6 bg-myColor text-sm rounded-full text-white flex items-center justify-center">
             2
@@ -149,9 +160,11 @@ export default function NavIcons() {
         {/* CART DROPDOWN */}
         {isCartOpen && (
           <div
-            className="absolute p-4 rounded-md top-10 right-0 bg-white shadow-lg z-50 min-w-[300px] animate-popup transition-opacity duration-200 delay-200"
+            className="absolute p-4 rounded-md  right-0 bg-white shadow-lg  min-w-[300px] animate-popup transition-opacity duration-500 delay-200"
             onMouseEnter={() => setIsCartOpen(true)} // Keep dropdown open when hovering over it
             onMouseLeave={() => setIsCartOpen(false)} // Close dropdown when cursor leaves
+            role="menu"
+            aria-labelledby="cart-menu"
           >
             <CartModel />
           </div>

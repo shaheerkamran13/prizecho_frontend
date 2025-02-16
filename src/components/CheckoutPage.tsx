@@ -1,29 +1,15 @@
 'use client'
-import React, { useState } from "react";
-import { CreditCard, Truck } from 'lucide-react';
-import { FaStripe } from "react-icons/fa6";
-import { loadStripe, Stripe } from "@stripe/stripe-js";
-import toast, { Toaster } from "react-hot-toast";
-import Modal from "react-modal";
-
-type CartItem = {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-  image: string;
-  available: boolean;
-};
+import React, { useState, useEffect } from 'react'
+import { CreditCard, Truck } from 'lucide-react'
+import { FaStripe } from 'react-icons/fa6'
+import { loadStripe, Stripe } from '@stripe/stripe-js'
+import { useCart } from '@/context/cartContext' // Import useCart
+import toast, { Toaster } from 'react-hot-toast'
+import Modal from 'react-modal'
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
-);
-
-// Set app element for react-modal
-if (typeof window !== "undefined") {
-  // For Next.js, the root element is often '#__next'
-  Modal.setAppElement("#__next");
-}
+)
 
 // Define custom styles for Modal
 const customModalStyles = {
@@ -36,102 +22,75 @@ const customModalStyles = {
     padding: '20px',
     borderRadius: '8px',
     maxWidth: '90%',
-    width: '400px'
+    width: '400px',
   },
   overlay: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)'
-  }
-};
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+}
 
 const CheckoutPage = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      id: 1,
-      name: "Product Name 1",
-      price: 4900, // in cents
-      quantity: 2,
-      image:
-        "https://images.pexels.com/photos/29594648/pexels-photo-29594648/free-photo-of-elegant-portrait-of-man-in-outdoor-setting.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-      available: true,
-    },
-    {
-      id: 2,
-      name: "Product Name 2",
-      price: 7900, // in cents
-      quantity: 1,
-      image:
-        "https://images.pexels.com/photos/29594648/pexels-photo-29594648/free-photo-of-elegant-portrait-of-man-in-outdoor-setting.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-      available: true,
-    },
-  ]);
+  const { cartItems, removeFromCart, calculateSubtotal } = useCart() // Use cart context
+  const [isCashOnDeliveryModalOpen, setIsCashOnDeliveryModalOpen] = useState(false)
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false)
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('card')
 
-  const [isCashOnDeliveryModalOpen, setIsCashOnDeliveryModalOpen] = useState(false);
-  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
-  // State to hold the selected payment method: "card", "stripe", or "cod"
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("card");
-
-  const handleRemoveItem = (id: number) => {
-    setCartItems(cartItems.filter((item) => item.id !== id));
-    toast.success("Item removed from cart");
-  };
-
-  const calculateSubtotal = () => {
-    return (
-      cartItems.reduce((total, item) => total + item.price * item.quantity, 0) /
-      100
-    ); // Convert cents to dollars
-  };
+  // Dynamically set the app element for react-modal after the component mounts
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      Modal.setAppElement('#__next')
+    }
+  }, [])
 
   const handleCheckout = async () => {
-    const stripe = (await stripePromise) as Stripe;
+    const stripe = (await stripePromise) as Stripe
 
     try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: cartItems }),
-      });
+      })
 
-      const { sessionId } = await response.json();
-      await stripe.redirectToCheckout({ sessionId });
+      const { sessionId } = await response.json()
+      await stripe.redirectToCheckout({ sessionId })
     } catch (error) {
-      console.error("Error during Stripe checkout:", error);
-      toast.error("Checkout failed. Please try again.");
+      console.error('Error during Stripe checkout:', error)
+      toast.error('Checkout failed. Please try again.')
     }
-  };
+  }
 
   const handleCashOnDelivery = () => {
-    setIsCashOnDeliveryModalOpen(true);
-  };
+    setIsCashOnDeliveryModalOpen(true)
+  }
 
   const confirmCashOnDelivery = () => {
-    setIsCashOnDeliveryModalOpen(false);
-    toast.success("Order placed successfully! Payment will be collected on delivery.");
-  };
+    setIsCashOnDeliveryModalOpen(false)
+    toast.success('Order placed successfully! Payment will be collected on delivery.')
+  }
 
   const handleCardPayment = () => {
-    setIsCardModalOpen(true);
-  };
+    setIsCardModalOpen(true)
+  }
 
   const confirmCardPayment = () => {
-    setIsCardModalOpen(false);
-    toast.success("Card payment processed successfully!");
-  };
+    setIsCardModalOpen(false)
+    toast.success('Card payment processed successfully!')
+  }
 
-  // New function to handle order placement based on selected payment method
   const handlePlaceOrder = () => {
-    if (selectedPaymentMethod === "card") {
-      handleCardPayment();
-    } else if (selectedPaymentMethod === "stripe") {
-      handleCheckout();
-    } else if (selectedPaymentMethod === "cod") {
-      handleCashOnDelivery();
+    if (selectedPaymentMethod === 'card') {
+      handleCardPayment()
+    } else if (selectedPaymentMethod === 'stripe') {
+      handleCheckout()
+    } else if (selectedPaymentMethod === 'cod') {
+      handleCashOnDelivery()
     }
-  };
+  }
 
-  const subtotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-  const shipping = 50; // Fixed shipping cost
-  const total = subtotal + shipping;
+  const subtotal = calculateSubtotal() // Use calculateSubtotal from useCart
+  const shipping = 50 // Fixed shipping cost
+  const total = subtotal + shipping
 
   return (
     <div className="min-h-screen bg-gray-50 py-8" id="__next">
@@ -160,7 +119,7 @@ const CheckoutPage = () => {
                     </div>
                     <p className="text-lg font-semibold">PKR {item.price * item.quantity}</p>
                     <button
-                      onClick={() => handleRemoveItem(item.id)}
+                      onClick={() => removeFromCart(item.id)} // Use removeFromCart from useCart
                       className="text-red-500 hover:text-red-700"
                     >
                       Remove
@@ -173,7 +132,7 @@ const CheckoutPage = () => {
               <div className="mt-8 border-t pt-6">
                 <div className="flex justify-between mb-3">
                   <p className="text-gray-600">Subtotal</p>
-                  <p className="font-semibold">PKR {subtotal}</p>
+                  <p className="font-semibold">PKR {subtotal.toFixed(2)}</p>
                 </div>
                 <div className="flex justify-between mb-3">
                   <p className="text-gray-600">Shipping</p>
@@ -181,7 +140,7 @@ const CheckoutPage = () => {
                 </div>
                 <div className="flex justify-between">
                   <p className="text-gray-600">Total</p>
-                  <p className="text-xl font-semibold text-myColor">PKR {total}</p>
+                  <p className="text-xl font-semibold text-myColor">PKR {total.toFixed(2)}</p>
                 </div>
               </div>
             </div>
@@ -201,8 +160,8 @@ const CheckoutPage = () => {
                     id="card"
                     name="paymentMethod"
                     value="card"
-                    checked={selectedPaymentMethod === "card"}
-                    onChange={() => setSelectedPaymentMethod("card")}
+                    checked={selectedPaymentMethod === 'card'}
+                    onChange={() => setSelectedPaymentMethod('card')}
                   />
                   <CreditCard className="w-6 h-6 text-gray-500" />
                   <label htmlFor="card" className="cursor-pointer">
@@ -219,8 +178,8 @@ const CheckoutPage = () => {
                     id="stripe"
                     name="paymentMethod"
                     value="stripe"
-                    checked={selectedPaymentMethod === "stripe"}
-                    onChange={() => setSelectedPaymentMethod("stripe")}
+                    checked={selectedPaymentMethod === 'stripe'}
+                    onChange={() => setSelectedPaymentMethod('stripe')}
                   />
                   <FaStripe className="w-6 h-6 text-gray-500" />
                   <label htmlFor="stripe" className="cursor-pointer">
@@ -237,8 +196,8 @@ const CheckoutPage = () => {
                     id="cod"
                     name="paymentMethod"
                     value="cod"
-                    checked={selectedPaymentMethod === "cod"}
-                    onChange={() => setSelectedPaymentMethod("cod")}
+                    checked={selectedPaymentMethod === 'cod'}
+                    onChange={() => setSelectedPaymentMethod('cod')}
                   />
                   <Truck className="w-6 h-6 text-gray-500" />
                   <label htmlFor="cod" className="cursor-pointer">
@@ -329,7 +288,7 @@ const CheckoutPage = () => {
         </form>
       </Modal>
     </div>
-  );
-};
+  )
+}
 
-export default CheckoutPage;
+export default CheckoutPage

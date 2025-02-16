@@ -1,74 +1,15 @@
-"use client";
-import React, { useState } from "react";
-import Image from "next/image";
-import { loadStripe, Stripe } from "@stripe/stripe-js";
-
-// Initialize Stripe with the publishable key
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
-);
-
-type CartItem = {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-  image: string;
-  available: boolean;
-};
+// components/CartModel.tsx
+'use client'
+import React from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useCart } from '@/context/cartContext'
 
 export default function CartModel() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      id: 1,
-      name: "Product Name 1",
-      price: 4900, // in cents
-      quantity: 2,
-      image:
-        "https://images.pexels.com/photos/29594648/pexels-photo-29594648/free-photo-of-elegant-portrait-of-man-in-outdoor-setting.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-      available: true,
-    },
-    {
-      id: 2,
-      name: "Product Name 2",
-      price: 7900, // in cents
-      quantity: 1,
-      image:
-        "https://images.pexels.com/photos/29594648/pexels-photo-29594648/free-photo-of-elegant-portrait-of-man-in-outdoor-setting.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-      available: true,
-    },
-  ]);
-
-  const handleRemoveItem = (id: number) => {
-    setCartItems(cartItems.filter((item) => item.id !== id));
-  };
-
-  const calculateSubtotal = () => {
-    return (
-      cartItems.reduce((total, item) => total + item.price * item.quantity, 0) /
-      100
-    ); // Convert cents to dollars
-  };
-
-  const handleCheckout = async () => {
-    const stripe = (await stripePromise) as Stripe;
-
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: cartItems }),
-      });
-
-      const { sessionId } = await response.json();
-      await stripe.redirectToCheckout({ sessionId });
-    } catch (error) {
-      console.error("Error during Stripe checkout:", error);
-    }
-  };
+  const { cartItems, removeFromCart, calculateSubtotal } = useCart()
 
   return (
-    <div className="w-max absolute p-4 rounded-md shadow-[0_3px_10px_rgb(0,0,0,0.2)] bg-white top-12 right-0 flex flex-col gap-6 z-20">
+    <div className="w-max absolute p-4 rounded-md shadow-[0_3px_10px_rgb(0,0,0,0.2)] bg-white  right-0 flex flex-col gap-6">
       {!cartItems.length ? (
         <div className="">Cart is empty</div>
       ) : (
@@ -95,12 +36,12 @@ export default function CartModel() {
                     </div>
                   </div>
                   <div className="text-sm text-gray-500">
-                    {item.available ? "Available" : "Out of stock"}
+                    {item.available ? 'Available' : 'Out of stock'}
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Qty. {item.quantity}</span>
                     <button
-                      onClick={() => handleRemoveItem(item.id)}
+                      onClick={() => removeFromCart(item.id)}
                       className="text-blue-500"
                     >
                       Remove
@@ -125,16 +66,13 @@ export default function CartModel() {
               <button className="rounded-md py-3 ring-1 ring-gray-300 px-4">
                 View Cart
               </button>
-              <button
-                onClick={handleCheckout}
-                className="rounded-md py-3 px-4 bg-black text-white"
-              >
-                Checkout
+              <button className="rounded-md py-3 px-4 bg-black text-white">
+                <Link href="/checkout">Checkout</Link>
               </button>
             </div>
           </div>
         </>
       )}
     </div>
-  );
+  )
 }

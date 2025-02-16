@@ -4,18 +4,15 @@ import React, { useState } from 'react';
 import { 
   User, 
   Package, 
-  Heart, 
   MapPin, 
   CreditCard, 
   Bell, 
   Lock,
-  Edit,
   ChevronRight,
   WalletIcon
 } from 'lucide-react';
 
 import OrdersSection from '@/components/Profile/OrdersSection';
-import { WishlistSection } from '@/components/Profile/WishListSection';
 import { AddressesSection } from '@/components/Profile/AddressesSection';
 import { PaymentMethodsSection } from '@/components/Profile/PaymentMethodsSection';
 import { ProfileSection } from '@/components/Profile/ProfileSection';
@@ -31,7 +28,6 @@ const ProfilePage = () => {
   const menuItems = [
     { id: 'profile', icon: <User size={20} />, label: 'Personal Info' },
     { id: 'orders', icon: <Package size={20} />, label: 'Orders' },
-    { id: 'wishlist', icon: <Heart size={20} />, label: 'Wishlist' },
     { id: 'addresses', icon: <MapPin size={20} />, label: 'Addresses' },
     { id: 'wallet', icon: <WalletIcon size={20} />, label: 'Wallet' },
     { id: 'payments', icon: <CreditCard size={20} />, label: 'Payment Methods' },
@@ -51,12 +47,7 @@ const ProfilePage = () => {
         return (
           <OrdersSection/>
         );
-        
-      case 'wishlist':
-        return (
-          <WishlistSection/>
-        );
-        
+
       case 'addresses':
         return (
           <AddressesSection/>
