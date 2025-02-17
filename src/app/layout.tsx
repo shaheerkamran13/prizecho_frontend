@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 import 'react-toastify/dist/ReactToastify.css';
 import { CartProvider } from "@/context/cartContext";
+import { FilterProvider } from "@/context/filterContext";
 
 
 export const metadata: Metadata = {
@@ -25,7 +26,9 @@ export default function RootLayout({
         
         <CartProvider>
           <Navbar/>
+          <FilterProvider>
             {children}
+          </FilterProvider>
           <Footer/>
         </CartProvider>
         

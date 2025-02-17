@@ -1,42 +1,47 @@
-'use client';
-
-import React, { useState } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import CartModel from './CartModel';
+// components/NavIcons.tsx
+'use client'
+import React, { useState } from 'react'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import CartModel from './CartModel'
+import { useCart } from '@/context/cartContext'
 
 export default function NavIcons() {
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isCartOpen, setIsCartOpen] = useState(false)
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false)
 
-  const router = useRouter();
+  const router = useRouter()
+  const { cartItems } = useCart()
 
   // TEMPORARY LOGIN ATTEMPT, AUTH WILL BE IMPLEMENTED LATER
-  const isLoggedIn = false;
+  const isLoggedIn = false
 
   const handleProfile = () => {
     if (!isLoggedIn) {
-      router.push('/login');
+      router.push('/login')
     }
-    setIsProfileOpen((prev) => !prev);
-  };
+    setIsProfileOpen((prev) => !prev)
+  }
 
   // Example notification data
-  const notifications = [
-    { id: 1, text: 'Your order has been shipped.', time: '2 hours ago' },
-    { id: 2, text: 'New product available: Summer Collection.', time: '1 day ago' },
-    { id: 3, text: 'Flash sale starts tomorrow!', time: '3 days ago' },
-  ];
+  // const notifications = [
+  //   { id: 1, text: 'Your order has been shipped.', time: '2 hours ago' },
+  //   { id: 2, text: 'New product available: Summer Collection.', time: '1 day ago' },
+  //   { id: 3, text: 'Flash sale starts tomorrow!', time: '3 days ago' },
+  // ]
+
+  // Calculate total number of items in the cart
+  const totalItemsInCart = cartItems.reduce((total, item) => total + item.quantity, 0)
 
   return (
-    <div className="flex items-center gap-6 xl:gap-8"> {/* Increased gap for better spacing */}
+    <div className="flex items-center gap-6 xl:gap-8">
       {/* PROFILE COMPONENT */}
       <div
         className="relative"
-        onMouseEnter={() => setIsProfileOpen(true)} // Show dropdown on hover
-        onMouseLeave={() => setIsProfileOpen(false)} // Hide dropdown on mouse leave
+        onMouseEnter={() => setIsProfileOpen(true)}
+        onMouseLeave={() => setIsProfileOpen(false)}
       >
         <Image
           src={'/profile.png'}
@@ -52,8 +57,8 @@ export default function NavIcons() {
         {isProfileOpen && (
           <div
             className="absolute p-4 rounded-md top-8 -left-4 bg-white shadow-lg z-50 min-w-[160px] animate-popup transition-opacity duration-500 delay-500"
-            onMouseEnter={() => setIsProfileOpen(true)} // Keep dropdown open when hovering over it
-            onMouseLeave={() => setIsProfileOpen(false)} // Close dropdown when cursor leaves
+            onMouseEnter={() => setIsProfileOpen(true)}
+            onMouseLeave={() => setIsProfileOpen(false)}
             role="menu"
             aria-labelledby="profile-menu"
           >
@@ -84,11 +89,11 @@ export default function NavIcons() {
         )}
       </div>
 
-      {/* NOTIFICATION COMPONENT */}
+      {/* NOTIFICATION COMPONENT
       <div
         className="relative"
-        onMouseEnter={() => setIsNotificationOpen(true)} // Show dropdown on hover
-        onMouseLeave={() => setIsNotificationOpen(false)} // Hide dropdown on mouse leave
+        onMouseEnter={() => setIsNotificationOpen(true)}
+        onMouseLeave={() => setIsNotificationOpen(false)}
       >
         <Image
           src={'/notification.png'}
@@ -100,14 +105,14 @@ export default function NavIcons() {
         />
         <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-xs rounded-full text-white flex items-center justify-center">
           {notifications.length}
-        </div>
+        </div> */}
 
         {/* NOTIFICATION DROPDOWN */}
-        {isNotificationOpen && (
+        {/* {isNotificationOpen && (
           <div
             className="absolute p-4 rounded-md top-8 right-0 bg-white shadow-lg z-50 min-w-[300px] animate-popup transition-opacity duration-200 delay-200"
-            onMouseEnter={() => setIsNotificationOpen(true)} // Keep dropdown open when hovering over it
-            onMouseLeave={() => setIsNotificationOpen(false)} // Close dropdown when cursor leaves
+            onMouseEnter={() => setIsNotificationOpen(true)}
+            onMouseLeave={() => setIsNotificationOpen(false)}
             role="menu"
             aria-labelledby="notification-menu"
           >
@@ -135,13 +140,13 @@ export default function NavIcons() {
             </div>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* CART COMPONENT */}
       <div
         className="relative"
-        onMouseEnter={() => setIsCartOpen(true)} // Show dropdown on hover
-        onMouseLeave={() => setIsCartOpen(false)} // Hide dropdown on mouse leave
+        onMouseEnter={() => setIsCartOpen(true)}
+        onMouseLeave={() => setIsCartOpen(false)}
       >
         <div className="cursor-pointer">
           <Image
@@ -152,17 +157,18 @@ export default function NavIcons() {
             className="cursor-pointer"
             aria-label="Cart"
           />
+          {/* Dynamic Cart Item Count */}
           <div className="absolute -top-4 -right-4 w-6 h-6 bg-myColor text-sm rounded-full text-white flex items-center justify-center">
-            2
+            {totalItemsInCart}
           </div>
         </div>
 
         {/* CART DROPDOWN */}
         {isCartOpen && (
           <div
-            className="absolute p-4 rounded-md  right-0 bg-white shadow-lg  min-w-[300px] animate-popup transition-opacity duration-500 delay-200"
-            onMouseEnter={() => setIsCartOpen(true)} // Keep dropdown open when hovering over it
-            onMouseLeave={() => setIsCartOpen(false)} // Close dropdown when cursor leaves
+            className="absolute p-4 rounded-md right-0 bg-white shadow-lg min-w-[300px] animate-popup transition-opacity duration-500 delay-200"
+            onMouseEnter={() => setIsCartOpen(true)}
+            onMouseLeave={() => setIsCartOpen(false)}
             role="menu"
             aria-labelledby="cart-menu"
           >
@@ -171,5 +177,5 @@ export default function NavIcons() {
         )}
       </div>
     </div>
-  );
+  )
 }

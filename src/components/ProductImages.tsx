@@ -1,12 +1,14 @@
 'use client'
 import Image from 'next/image'
 import React, { useState } from 'react'
+interface ProductImagesProps {
+  image: string[];
+}
 
 
 
 
-
-export default function ProductImages() {
+export default function ProductImages({ image }: ProductImagesProps) {
 
   const [index, setIndex] = useState(0)
 const images = [

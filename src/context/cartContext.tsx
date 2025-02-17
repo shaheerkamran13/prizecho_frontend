@@ -3,18 +3,19 @@
 import React, { createContext, useContext, useState } from 'react'
 
 type CartItem = {
-  id: number 
+  id: number
   name: string
   price: number
   quantity: number
   image: string
   available: boolean
+  selectedOptions: { size?: string; color?: string }
 }
 
 type CartContextType = {
   cartItems: CartItem[]
   addToCart: (item: CartItem) => void
-  removeFromCart: (id: number, removeFromCart?:any) => void
+  removeFromCart: (id: number) => void
   calculateSubtotal: () => number
 }
 

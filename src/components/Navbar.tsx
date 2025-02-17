@@ -1,4 +1,5 @@
-import React from 'react';
+'use client'
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Menu from './Menu';
 import Image from 'next/image';
@@ -7,6 +8,17 @@ import NavIcons from './NavIcons';
 import { ScrollHandler } from './ScrollHandler';
 
 export default function Navbar() {
+  const [isCategoriesHovered, setIsCategoriesHovered] = useState(false);
+
+  // Example categories data
+  const categories = [
+    { name: 'Electronics', href: '/categories/electronics' },
+    { name: 'Fashion', href: '/categories/fashion' },
+    { name: 'Home & Kitchen', href: '/categories/home-kitchen' },
+    { name: 'Beauty', href: '/categories/beauty' },
+    { name: 'Sports', href: '/categories/sports' },
+  ];
+
   return (
     <ScrollHandler>
       <div className="h-20 px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64 relative">
@@ -36,9 +48,34 @@ export default function Navbar() {
             </Link>
 
             <div className="hidden xl:flex gap-4">
-              <Link href={'/'}>Homepage</Link>
-              <Link href={'/aboutUs'}>About</Link>
-              <Link href={'/contact'}>Contact</Link>
+              <Link href={'/'} className="hover:text-myColor transition-colors">
+                Homepage
+              </Link>
+              {/* Categories Link with Dropdown */}
+              <div
+                className="relative"
+                onMouseEnter={() => setIsCategoriesHovered(true)}
+                onMouseLeave={() => setIsCategoriesHovered(false)}
+              >
+                <Link href={'/categories'}  className="hover:text-myColor transition-colors">
+                  Categories
+                  
+                </Link>
+                {/* Dropdown Menu */}
+                {isCategoriesHovered && (
+                  <div className="absolute top-full left-0 mt-2 w-48 bg-white shadow-lg rounded-lg overflow-hidden z-50">
+                    {categories.map((category) => (
+                      <Link
+                        key={category.name}
+                        href={category.href}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        {category.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

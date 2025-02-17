@@ -9,7 +9,7 @@ export default function CartModel() {
   const { cartItems, removeFromCart, calculateSubtotal } = useCart()
 
   return (
-    <div className="w-max absolute p-4 rounded-md shadow-[0_3px_10px_rgb(0,0,0,0.2)] bg-white  right-0 flex flex-col gap-6">
+    <div className="w-max absolute p-4 rounded-md shadow-[0_3px_10px_rgb(0,0,0,0.2)] bg-white right-0 flex flex-col gap-6">
       {!cartItems.length ? (
         <div className="">Cart is empty</div>
       ) : (
@@ -64,7 +64,7 @@ export default function CartModel() {
 
             <div className="flex justify-between text-sm">
               <button className="rounded-md py-3 ring-1 ring-gray-300 px-4">
-                View Cart
+                <Link href="/cart">View Cart</Link>
               </button>
               <button className="rounded-md py-3 px-4 bg-black text-white">
                 <Link href="/checkout">Checkout</Link>
